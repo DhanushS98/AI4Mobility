@@ -3,94 +3,90 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI4Mobility — exercise helper for children and parents</title>
-<meta name="description" content="A child-friendly exercise helper: NHS-sourced paediatric physiotherapy and stretch programmes, split into clear steps with pictures.">
+<title>AI4Mobility — guided exercise programmes</title>
+<meta name="description" content="Guided paediatric physiotherapy and mobility programmes, presented one step at a time with illustrations, timing and the original source description.">
 <style>
 /* =============================================================================
-   AI4Mobility — child-friendly interface
-   Design goals: large targets, calm colour, obvious focus, readable at 200%
-   zoom, and nothing that moves unless the child chooses it.
+   AI4Mobility — interface styles
+   A calm, clinical presentation: restrained colour, generous spacing, high
+   legibility, and clear focus states throughout.
    ============================================================================= */
 
 :root {
-  /* categorical accents */
-  --blue:    #2a78d6;
-  --orange:  #eb6834;
-  --aqua:    #1baf7a;
-  --yellow:  #eda100;
-  --magenta: #e87ba4;
-  --green:   #008300;
+  --ink:        #16202b;
+  --ink-2:      #3d4d5c;
+  --ink-3:      #6a7b8a;
+  --rule:       #d8e0e6;
+  --rule-2:     #eaeff2;
+  --paper:      #ffffff;
+  --page:       #f7f9fa;
+  --page-2:     #eef2f5;
 
-  --blue-soft:    #e8f1fc;
-  --orange-soft:  #fdeee8;
-  --aqua-soft:    #e4f7f0;
-  --yellow-soft:  #fdf4e0;
-  --magenta-soft: #fdeef4;
-  --green-soft:   #e5f3e5;
+  --accent:     #1f6f8b;
+  --accent-dk:  #17566c;
+  --accent-lt:  #e8f1f4;
 
-  --ink:      #1c2b3a;
-  --ink-soft: #4b6072;
-  --rule:     #c7d4dd;
-  --grid:     #e7edf1;
-  --paper:    #ffffff;
-  --page:     #f5f8fb;
+  --warn:       #8a5a00;
+  --warn-bg:    #fdf6e7;
+  --warn-rule:  #e8cf9a;
 
-  --r-lg: 26px;
-  --r-md: 18px;
-  --r-sm: 12px;
+  --alert:      #9a3412;
+  --alert-bg:   #fdf1ec;
+  --alert-rule: #eebfa9;
 
-  --shadow: 0 2px 0 var(--grid), 0 8px 22px rgba(28, 43, 58, .07);
-  --shadow-lift: 0 4px 0 var(--grid), 0 14px 30px rgba(28, 43, 58, .12);
+  --ok:         #1b6b4a;
+  --ok-bg:      #e9f4ef;
 
-  --fs-base: 17px;
-  --step-dur: .35s;
+  --r-lg: 10px;
+  --r-md: 8px;
+  --r-sm: 5px;
+
+  --shadow: 0 1px 2px rgba(22, 32, 43, .05), 0 4px 14px rgba(22, 32, 43, .05);
+
+  --fs: 16.5px;
+  --dur: .18s;
 }
 
-/* accessibility toggles set on <html> */
-html.big-text    { --fs-base: 21px; }
+html.big-text { --fs: 20px; }
 html.high-contrast {
-  --ink: #000; --ink-soft: #1a1a1a; --page: #fff; --rule: #000; --grid: #767676;
-  --blue-soft:#fff; --orange-soft:#fff; --aqua-soft:#fff;
-  --yellow-soft:#fff; --magenta-soft:#fff; --green-soft:#fff;
-  --shadow: 0 0 0 2px #000; --shadow-lift: 0 0 0 3px #000;
+  --ink: #000; --ink-2: #111; --ink-3: #222;
+  --rule: #000; --rule-2: #6b6b6b; --page: #fff; --page-2: #fff;
+  --accent: #00404f; --accent-lt: #fff;
+  --shadow: 0 0 0 1px #000;
 }
-html.calm-mode { --step-dur: 0s; }
+html.calm-mode { --dur: 0s; }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
-  font-size: var(--fs-base);
-  line-height: 1.55;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: var(--fs);
+  line-height: 1.6;
   color: var(--ink);
   background: var(--page);
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 { line-height: 1.2; margin: 0 0 .4em; font-weight: 800; letter-spacing: -.01em; }
-h1 { font-size: 1.85rem; }
-h2 { font-size: 1.35rem; }
-h3 { font-size: 1.08rem; }
-p  { margin: 0 0 .8em; }
+h1, h2, h3, h4 { line-height: 1.25; margin: 0 0 .5em; font-weight: 650; letter-spacing: -.011em; }
+h1 { font-size: 1.6rem; font-weight: 700; }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 1rem; }
+p  { margin: 0 0 .85em; }
+p:last-child { margin-bottom: 0; }
 
-a { color: var(--blue); }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:hover { color: var(--accent-dk); }
 
-/* visible focus everywhere — required, not optional */
-:focus-visible {
-  outline: 4px solid var(--blue);
-  outline-offset: 3px;
-  border-radius: 6px;
-}
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 
 .skip-link {
-  position: absolute; left: -9999px; top: 0;
-  background: var(--blue); color: #fff; padding: 12px 18px;
-  border-radius: 0 0 var(--r-sm) 0; z-index: 200; font-weight: 700;
+  position: absolute; left: -9999px; top: 0; z-index: 200;
+  background: var(--accent); color: #fff; padding: 11px 18px; font-weight: 600;
 }
 .skip-link:focus { left: 0; }
 
-.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -98,291 +94,245 @@ a { color: var(--blue); }
 
 /* ------------------------------------------------------------------ header */
 
-.topbar {
-  background: var(--paper);
-  border-bottom: 2px solid var(--grid);
-  position: sticky; top: 0; z-index: 50;
-}
-.topbar .wrap {
-  display: flex; align-items: center; gap: 16px;
-  min-height: 76px; flex-wrap: wrap;
-}
-.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
-.brand-mark {
-  width: 46px; height: 46px; border-radius: 14px; flex: none;
-  background: linear-gradient(135deg, var(--blue), var(--aqua));
-  display: grid; place-items: center; color: #fff; font-size: 22px;
-}
-.brand-name { font-weight: 800; font-size: 1.15rem; letter-spacing: -.02em; }
-.brand-sub  { font-size: .74rem; color: var(--ink-soft); font-weight: 600; }
+.topbar { background: var(--paper); border-bottom: 1px solid var(--rule); }
+.topbar .wrap { display: flex; align-items: center; gap: 20px; min-height: 68px; flex-wrap: wrap; }
 
-.topbar-tools { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 11px; text-decoration: none; color: var(--ink); }
+.brand-name { font-weight: 700; font-size: 1.12rem; letter-spacing: -.02em; }
+.brand-sub {
+  font-size: .78rem; color: var(--ink-3); font-weight: 500;
+  padding-left: 11px; border-left: 1px solid var(--rule);
+}
+
+.topbar-tools { margin-left: auto; display: flex; gap: 7px; flex-wrap: wrap; }
 
 .chip {
-  border: 2px solid var(--rule); background: var(--paper); color: var(--ink);
-  border-radius: 999px; padding: 9px 15px; font: inherit; font-size: .84rem;
-  font-weight: 700; cursor: pointer; min-height: 44px;
-  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid var(--rule); background: var(--paper); color: var(--ink-2);
+  border-radius: var(--r-sm); padding: 8px 13px; font: inherit; font-size: .82rem;
+  font-weight: 550; cursor: pointer; min-height: 38px;
+  transition: border-color var(--dur), background var(--dur);
 }
-.chip:hover { border-color: var(--blue); }
-.chip[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+.chip:hover { border-color: var(--ink-3); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 /* -------------------------------------------------------------------- nav */
 
-.tabs { display: flex; gap: 10px; padding: 16px 0 0; flex-wrap: wrap; }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--rule); }
 .tab {
-  border: 2px solid transparent; background: transparent; color: var(--ink-soft);
-  font: inherit; font-weight: 800; padding: 11px 18px; border-radius: var(--r-md);
-  cursor: pointer; min-height: 48px;
+  border: 0; border-bottom: 2px solid transparent; background: transparent;
+  color: var(--ink-3); font: inherit; font-weight: 600; font-size: .92rem;
+  padding: 14px 18px; cursor: pointer; margin-bottom: -1px;
+  transition: color var(--dur), border-color var(--dur);
 }
-.tab:hover { background: var(--paper); color: var(--ink); }
-.tab[aria-selected="true"] {
-  background: var(--paper); color: var(--ink);
-  border-color: var(--grid); box-shadow: var(--shadow);
-}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
 
-.panel { padding: 26px 0 70px; }
+.panel { padding: 30px 0 80px; }
 .panel[hidden] { display: none; }
 
-/* ------------------------------------------------------------------- hero */
+/* ------------------------------------------------------------------- head */
 
-.hero {
-  background: var(--paper); border: 2px solid var(--grid);
-  border-radius: var(--r-lg); padding: 28px; box-shadow: var(--shadow);
-  margin-bottom: 26px;
+.pagehead { margin-bottom: 28px; max-width: 74ch; }
+.pagehead h1 { margin-bottom: .35em; }
+.pagehead p { color: var(--ink-2); }
+
+.eyebrow {
+  font-size: .74rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px;
 }
-.hero h1 { margin-bottom: .3em; }
-.hero p { color: var(--ink-soft); max-width: 62ch; margin-bottom: 0; }
 
-.hero-stats { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 20px; }
-.hstat { min-width: 96px; }
-.hstat b { display: block; font-size: 1.7rem; line-height: 1.1; }
-.hstat span { font-size: .78rem; color: var(--ink-soft); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+/* ----------------------------------------------------------------- filter */
+
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; align-items: center; }
+.filters .lbl { font-size: .82rem; font-weight: 600; color: var(--ink-3); margin-right: 4px; }
 
 /* ------------------------------------------------------------------ cards */
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)); gap: 20px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(305px, 1fr)); gap: 16px; }
 
 .ecard {
-  background: var(--paper); border: 2px solid var(--grid);
-  border-radius: var(--r-lg); padding: 20px; text-align: left;
-  cursor: pointer; font: inherit; color: inherit;
-  box-shadow: var(--shadow); transition: transform var(--step-dur), box-shadow var(--step-dur);
-  display: flex; flex-direction: column; gap: 12px; min-height: 250px;
+  background: var(--paper); border: 1px solid var(--rule); border-radius: var(--r-lg);
+  padding: 20px 21px; text-align: left; cursor: pointer; font: inherit; color: inherit;
+  display: flex; flex-direction: column; gap: 11px; min-height: 210px;
+  transition: border-color var(--dur), box-shadow var(--dur);
 }
-.ecard:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); }
-.ecard:active { transform: translateY(-1px); }
+.ecard:hover { border-color: var(--accent); box-shadow: var(--shadow); }
 
-.ecard-top { display: flex; align-items: flex-start; gap: 13px; }
-.ecard-icon {
-  width: 58px; height: 58px; border-radius: 18px; flex: none;
-  display: grid; place-items: center; font-size: 30px;
-}
-.ecard h3 { margin: 0 0 3px; }
-.ecard-fam { font-size: .78rem; color: var(--ink-soft); font-weight: 700; }
-.ecard-goal { font-size: .9rem; color: var(--ink-soft); margin: 0; flex: 1; }
+.ecard-fig { height: 74px; display: flex; align-items: center; justify-content: flex-start; }
+.ecard-fig .posefig { height: 74px; width: auto; max-width: 130px; }
 
-.ecard-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.ecard h3 { margin: 0 0 2px; font-size: 1.05rem; font-weight: 650; }
+.ecard-sub { font-size: .82rem; color: var(--ink-3); }
+.ecard-goal { font-size: .87rem; color: var(--ink-2); margin: 0; flex: 1; line-height: 1.5; }
+
+.ecard-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
 .pill {
-  font-size: .74rem; font-weight: 800; padding: 5px 11px;
-  border-radius: 999px; background: var(--grid); color: var(--ink);
+  font-size: .72rem; font-weight: 600; padding: 3px 9px; border-radius: 3px;
+  background: var(--page-2); color: var(--ink-2); white-space: nowrap;
 }
-.pill.src { background: var(--aqua-soft); color: #0d6b4a; }
-.pill.opt { background: var(--yellow-soft); color: #7a5400; }
+.pill.src { background: var(--accent-lt); color: var(--accent-dk); }
 
-.dots { display: flex; gap: 4px; align-items: center; }
-.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--grid); }
-.dot.on { background: var(--orange); }
-
-/* colour variants */
-.c-blue    { background: var(--blue-soft); }
-.c-orange  { background: var(--orange-soft); }
-.c-aqua    { background: var(--aqua-soft); }
-.c-yellow  { background: var(--yellow-soft); }
-.c-magenta { background: var(--magenta-soft); }
-.c-green   { background: var(--green-soft); }
+.level { display: inline-flex; gap: 3px; align-items: center; }
+.level i { width: 15px; height: 3px; border-radius: 2px; background: var(--rule); display: block; }
+.level i.on { background: var(--accent); }
 
 /* ---------------------------------------------------------------- session */
 
-.session { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: start; }
-@media (max-width: 900px) { .session { grid-template-columns: 1fr; } }
+.session { display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; align-items: start; }
+@media (max-width: 940px) { .session { grid-template-columns: 1fr; } }
 
 .card {
-  background: var(--paper); border: 2px solid var(--grid);
-  border-radius: var(--r-lg); padding: 22px; box-shadow: var(--shadow);
+  background: var(--paper); border: 1px solid var(--rule);
+  border-radius: var(--r-lg); padding: 22px 24px;
 }
-.card + .card { margin-top: 20px; }
-.card h2 { display: flex; align-items: center; gap: 10px; }
+.card + .card { margin-top: 16px; }
+.card > h2 {
+  font-size: .78rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 14px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-2);
+}
 
 .stagewrap { text-align: center; }
-.posefig { width: 100%; max-width: 400px; height: auto; }
+.stagehead {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: .78rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-3); border-bottom: 1px solid var(--rule-2);
+  padding-bottom: 10px; margin-bottom: 18px;
+}
 
-.pf-bone   { stroke: var(--ink); stroke-width: 5.5; stroke-linecap: round; fill: none; }
-.pf-spine  { stroke-width: 6.5; }
-.pf-far    { stroke: var(--ink-soft); opacity: .42; }
+.posefig { width: 100%; max-width: 380px; height: auto; }
+
+.pf-bone   { stroke: var(--ink); stroke-width: 5; stroke-linecap: round; fill: none; }
+.pf-spine  { stroke-width: 6; }
+.pf-far    { stroke: var(--ink-3); opacity: .40; }
 .pf-head   { fill: var(--ink); }
-.pf-joint  { fill: var(--orange); }
-.pf-joint.pf-far { fill: var(--ink-soft); opacity: .42; }
-.pf-floor  { stroke: var(--rule); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 2 7; }
-.pf-arrow  { stroke: var(--blue); stroke-width: 3.5; stroke-linecap: round; }
-.pf-arrowhead { fill: var(--blue); }
-.pf-pulse  { fill: none; stroke: var(--blue); stroke-width: 3; opacity: .8; }
-.pf-missing { fill: var(--ink-soft); font-size: 11px; font-family: inherit; }
+.pf-joint  { fill: var(--paper); stroke: var(--ink); stroke-width: 1.6; }
+.pf-joint.pf-far { fill: var(--ink-3); stroke: none; opacity: .40; }
+.pf-floor  { stroke: var(--rule); stroke-width: 2.5; stroke-linecap: round; }
+.pf-prop   { fill: var(--page-2); stroke: var(--rule); stroke-width: 1.5; }
+.pf-arrow  { stroke: var(--accent); stroke-width: 3.2; stroke-linecap: round; }
+.pf-arrowhead { fill: var(--accent); }
+.pf-pulse  { fill: none; stroke: var(--accent); stroke-width: 2.5; opacity: .7; }
+.pf-missing { fill: var(--ink-3); font-size: 11px; font-family: inherit; }
 
-html:not(.calm-mode) .pf-animated .pf-phase-a { animation: pfA 3.2s ease-in-out infinite; }
-html:not(.calm-mode) .pf-animated .pf-phase-b { animation: pfB 3.2s ease-in-out infinite; }
-html:not(.calm-mode) .pf-animated .pf-pulse   { animation: pfPulse 2s ease-in-out infinite; }
+html:not(.calm-mode) .pf-animated .pf-phase-a { animation: pfA 3.4s ease-in-out infinite; }
+html:not(.calm-mode) .pf-animated .pf-phase-b { animation: pfB 3.4s ease-in-out infinite; }
+html:not(.calm-mode) .pf-animated .pf-pulse   { animation: pfPulse 2.2s ease-in-out infinite; }
 @keyframes pfA { 0%,42% {opacity:1} 58%,100% {opacity:0} }
 @keyframes pfB { 0%,42% {opacity:0} 58%,100% {opacity:1} }
-@keyframes pfPulse { 0%,100% {r:9; opacity:.25} 50% {r:15; opacity:.75} }
+@keyframes pfPulse { 0%,100% {r:9; opacity:.2} 50% {r:15; opacity:.6} }
 
 @media (prefers-reduced-motion: reduce) {
   .pf-animated .pf-phase-a, .pf-animated .pf-phase-b, .pf-animated .pf-pulse { animation: none !important; }
   .pf-animated .pf-phase-b { opacity: 0; }
-  .ecard { transition: none; }
+  .ecard, .chip, .tab { transition: none; }
 }
 
-.stepline { font-size: .82rem; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; }
-.steptext { font-size: 1.18rem; font-weight: 700; margin: 10px 0 6px; }
-.stepcue  { color: var(--blue); font-weight: 800; font-size: 1rem; }
+.steptitle { font-size: 1.18rem; font-weight: 650; margin: 18px 0 6px; }
+.steptext  { font-size: 1rem; color: var(--ink-2); margin: 0 auto; max-width: 54ch; }
 
-.timer {
-  font-size: 3rem; font-weight: 800; font-variant-numeric: tabular-nums;
-  line-height: 1; margin: 14px 0 4px;
+.dose {
+  display: flex; gap: 30px; justify-content: center;
+  margin: 22px 0 4px; padding: 16px 0; border-top: 1px solid var(--rule-2);
 }
-.timer.small { font-size: 1.6rem; }
-.timer-label { font-size: .8rem; color: var(--ink-soft); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.dose > div { min-width: 74px; }
+.dose b { display: block; font-size: 1.9rem; font-weight: 650; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.dose span { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.dose.running b { color: var(--accent); }
 
-.controls { display: flex; gap: 11px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+.controls { display: flex; gap: 9px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
 
 .btn {
-  font: inherit; font-weight: 800; border-radius: var(--r-md); cursor: pointer;
-  padding: 14px 24px; min-height: 52px; border: 2px solid var(--ink);
-  background: var(--paper); color: var(--ink);
-  display: inline-flex; align-items: center; gap: 9px;
+  font: inherit; font-weight: 600; font-size: .93rem; border-radius: var(--r-md);
+  cursor: pointer; padding: 11px 20px; min-height: 44px;
+  border: 1px solid var(--rule); background: var(--paper); color: var(--ink);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background var(--dur), border-color var(--dur);
 }
-.btn:hover { background: var(--page); }
-.btn:disabled { opacity: .4; cursor: not-allowed; }
-.btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
-.btn-primary:hover { background: #205fac; }
-.btn-go { background: var(--green); border-color: var(--green); color: #fff; }
-.btn-go:hover { background: #026b02; }
-.btn-ghost { border-color: var(--rule); color: var(--ink-soft); }
-.btn-sm { padding: 9px 15px; min-height: 44px; font-size: .88rem; }
+.btn:hover:not(:disabled) { border-color: var(--ink-3); background: var(--page); }
+.btn:disabled { opacity: .38; cursor: not-allowed; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-dk); border-color: var(--accent-dk); }
+.btn-sm { padding: 7px 13px; min-height: 36px; font-size: .84rem; }
 
 /* step rail */
-.rail { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+.rail { list-style: none; padding: 0; margin: 0; }
 .rail li {
-  display: flex; gap: 12px; align-items: flex-start;
-  padding: 11px 13px; border-radius: var(--r-md);
-  border: 2px solid var(--grid); background: var(--paper);
+  display: flex; gap: 13px; align-items: flex-start;
+  padding: 11px 12px; border-radius: var(--r-sm); border-left: 2px solid transparent;
 }
-.rail li.done { border-color: var(--aqua); background: var(--aqua-soft); }
-.rail li.now  { border-color: var(--blue); background: var(--blue-soft); }
+.rail li + li { border-top: 1px solid var(--rule-2); }
+.rail li.done { color: var(--ink-3); }
+.rail li.now  { background: var(--accent-lt); border-left-color: var(--accent); }
 .rail-n {
-  width: 30px; height: 30px; border-radius: 50%; flex: none;
-  background: var(--grid); color: var(--ink);
-  display: grid; place-items: center; font-weight: 800; font-size: .88rem;
+  width: 22px; height: 22px; border-radius: 50%; flex: none; margin-top: 2px;
+  border: 1px solid var(--rule); color: var(--ink-3); background: var(--paper);
+  display: grid; place-items: center; font-weight: 650; font-size: .74rem;
 }
-.rail li.done .rail-n { background: var(--aqua); color: #fff; }
-.rail li.now  .rail-n { background: var(--blue); color: #fff; }
-.rail-t { font-size: .93rem; }
-.rail-p { font-size: .76rem; color: var(--ink-soft); font-weight: 700; margin-top: 3px; }
+.rail li.done .rail-n { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); }
+.rail li.now  .rail-n { background: var(--accent); border-color: var(--accent); color: #fff; }
+.rail-t { font-size: .91rem; font-weight: 550; display: block; }
+.rail-p { font-size: .78rem; color: var(--ink-3); margin-top: 1px; display: block; }
 
-/* progress bar */
-.bar { height: 14px; background: var(--grid); border-radius: 999px; overflow: hidden; margin: 6px 0 14px; }
-.bar > i { display: block; height: 100%; background: var(--aqua); border-radius: 999px; transition: width var(--step-dur); }
+/* progress */
+.bar { height: 5px; background: var(--rule-2); border-radius: 3px; overflow: hidden; margin: 4px 0 10px; }
+.bar > i { display: block; height: 100%; background: var(--accent); transition: width var(--dur); }
 
-/* stars */
-.stars { display: flex; gap: 5px; font-size: 1.5rem; }
-.star { filter: grayscale(1); opacity: .3; }
-.star.on { filter: none; opacity: 1; }
-
-/* ------------------------------------------------- original description box */
-
+/* original description */
 .orig {
-  background: var(--yellow-soft); border: 2px solid var(--yellow);
-  border-radius: var(--r-md); padding: 16px 18px;
+  background: var(--page); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+  border-radius: var(--r-sm); padding: 16px 18px;
 }
-.orig h3 { margin: 0 0 8px; font-size: .96rem; display: flex; align-items: center; gap: 8px; }
-.orig p { margin: 0; font-size: .93rem; }
-.orig .src { margin-top: 10px; font-size: .8rem; color: var(--ink-soft); font-weight: 700; }
+.orig p { margin: 0; font-size: .92rem; color: var(--ink-2); }
+.orig .src { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rule); font-size: .8rem; color: var(--ink-3); }
 
-.safety {
-  background: var(--orange-soft); border: 2px solid var(--orange);
-  border-radius: var(--r-md); padding: 14px 17px; font-size: .9rem;
+.notice {
+  border-radius: var(--r-sm); padding: 14px 17px; font-size: .89rem;
+  background: var(--warn-bg); border: 1px solid var(--warn-rule); color: var(--ink-2);
 }
-.safety strong { display: block; margin-bottom: 4px; }
+.notice strong { display: block; margin-bottom: 3px; color: var(--warn); font-size: .8rem;
+  letter-spacing: .05em; text-transform: uppercase; }
+.notice.alert { background: var(--alert-bg); border-color: var(--alert-rule); }
+.notice.alert strong { color: var(--alert); }
 
 /* ------------------------------------------------------------ builder tab */
 
-.builder { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
-@media (max-width: 900px) { .builder { grid-template-columns: 1fr; } }
+.builder { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 940px) { .builder { grid-template-columns: 1fr; } }
 
-label.fld { display: block; font-weight: 800; margin-bottom: 7px; font-size: .93rem; }
-.hint { font-size: .84rem; color: var(--ink-soft); margin: -3px 0 9px; }
+label.fld { display: block; font-weight: 600; margin-bottom: 6px; font-size: .9rem; }
+.hint { font-size: .84rem; color: var(--ink-3); margin: -2px 0 10px; }
 
 textarea, input[type="text"] {
-  width: 100%; font: inherit; padding: 14px 16px;
-  border: 2px solid var(--rule); border-radius: var(--r-md);
-  background: var(--paper); color: var(--ink); resize: vertical;
+  width: 100%; font: inherit; font-size: .95rem; padding: 13px 15px;
+  border: 1px solid var(--rule); border-radius: var(--r-md);
+  background: var(--paper); color: var(--ink); resize: vertical; line-height: 1.6;
 }
-textarea { min-height: 200px; line-height: 1.55; }
-textarea:focus, input[type="text"]:focus { border-color: var(--blue); }
+textarea { min-height: 210px; }
+textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
 
-.conf {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: .84rem; font-weight: 800; padding: 7px 13px; border-radius: 999px;
-}
-.conf.hi  { background: var(--aqua-soft);   color: #0d6b4a; }
-.conf.mid { background: var(--yellow-soft); color: #7a5400; }
-.conf.lo  { background: var(--orange-soft); color: #8c3311; }
+.empty { color: var(--ink-3); text-align: center; padding: 54px 20px; font-size: .92rem; }
 
-.warnbox {
-  background: var(--yellow-soft); border: 2px solid var(--yellow);
-  border-radius: var(--r-md); padding: 13px 16px; font-size: .88rem; margin-top: 14px;
-}
-.warnbox ul { margin: 6px 0 0; padding-left: 20px; }
-
-.method {
-  font-size: .82rem; color: var(--ink-soft); font-weight: 700;
-  border-top: 2px dashed var(--grid); margin-top: 16px; padding-top: 12px;
-}
-
-.empty { color: var(--ink-soft); text-align: center; padding: 40px 20px; }
-
-/* ------------------------------------------------------------- honesty tab */
-
-.htable { width: 100%; border-collapse: collapse; font-size: .92rem; }
-.htable th, .htable td { text-align: left; padding: 12px 13px; border-bottom: 2px solid var(--grid); vertical-align: top; }
-.htable th { font-weight: 800; background: var(--page); }
-.htable tr:last-child td { border-bottom: none; }
-
-.tag { font-size: .74rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
-.tag.built  { background: var(--aqua-soft);    color: #0d6b4a; }
-.tag.part   { background: var(--yellow-soft);  color: #7a5400; }
-.tag.not    { background: var(--orange-soft);  color: #8c3311; }
+.samples { display: flex; gap: 7px; flex-wrap: wrap; }
 
 /* ----------------------------------------------------------------- footer */
 
-.foot {
-  border-top: 2px solid var(--grid); background: var(--paper);
-  padding: 26px 0; font-size: .85rem; color: var(--ink-soft);
-}
-.foot a { font-weight: 700; }
+.foot { border-top: 1px solid var(--rule); background: var(--paper); padding: 28px 0 34px; }
+.foot p { font-size: .84rem; color: var(--ink-3); max-width: 90ch; }
+.foot a { font-weight: 500; }
 
 /* --------------------------------------------------------------- utility */
 
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 .spread { justify-content: space-between; }
 .mt { margin-top: 16px; }
-.mb { margin-bottom: 16px; }
-.muted { color: var(--ink-soft); }
-.small { font-size: .86rem; }
+.muted { color: var(--ink-3); }
+.small { font-size: .87rem; }
 
 @media print {
-  .topbar, .tabs, .controls, .chip { display: none !important; }
-  .card, .hero { box-shadow: none; border-color: #999; break-inside: avoid; }
+  .topbar, .tabs, .controls, .chip, .filters { display: none !important; }
+  .card { border-color: #999; break-inside: avoid; }
 }
 
 </style>
@@ -394,26 +344,22 @@ textarea:focus, input[type="text"]:focus { border-color: var(--blue); }
 <header class="topbar">
   <div class="wrap">
     <a class="brand" href="#main">
-      <span class="brand-mark" aria-hidden="true">🤸</span>
-      <span>
-        <span class="brand-name">AI4Mobility</span><br>
-        <span class="brand-sub">Exercise helper for children and parents</span>
-      </span>
+      <span class="brand-name">AI4Mobility</span>
+      <span class="brand-sub">Guided exercise programmes</span>
     </a>
     <div class="topbar-tools">
-      <button class="chip" id="toggle-text" type="button" aria-pressed="false">🔠 Bigger text</button>
-      <button class="chip" id="toggle-contrast" type="button" aria-pressed="false">◐ High contrast</button>
-      <button class="chip" id="toggle-calm" type="button" aria-pressed="false">🌙 Calm mode</button>
+      <button class="chip" id="toggle-text" type="button" aria-pressed="false">Larger text</button>
+      <button class="chip" id="toggle-contrast" type="button" aria-pressed="false">High contrast</button>
+      <button class="chip" id="toggle-calm" type="button" aria-pressed="false">Reduce motion</button>
     </div>
   </div>
 </header>
 
 <div class="wrap">
   <nav class="tabs" role="tablist" aria-label="Sections">
-    <button class="tab" role="tab" data-tab="library"  aria-selected="true"  type="button">🏃 Exercises</button>
-    <button class="tab" role="tab" data-tab="session"  aria-selected="false" type="button">▶️ Do it now</button>
-    <button class="tab" role="tab" data-tab="builder"  aria-selected="false" type="button">✏️ Add your own</button>
-    <button class="tab" role="tab" data-tab="honesty"  aria-selected="false" type="button">🔍 What's real</button>
+    <button class="tab" role="tab" data-tab="library" aria-selected="true"  type="button">Programmes</button>
+    <button class="tab" role="tab" data-tab="session" aria-selected="false" type="button">Current session</button>
+    <button class="tab" role="tab" data-tab="builder" aria-selected="false" type="button">Add a programme</button>
   </nav>
 </div>
 
@@ -421,33 +367,19 @@ textarea:focus, input[type="text"]:focus { border-color: var(--blue); }
 
   <!-- ============================================================ LIBRARY -->
   <section class="panel" id="panel-library" role="tabpanel">
-    <div class="hero">
-      <h1>Let's move! 🎉</h1>
+    <div class="pagehead">
+      <div class="eyebrow">Exercise library</div>
+      <h1>Choose a programme</h1>
       <p>
-        Pick an exercise below. Each one shows you a picture, one step at a time,
-        and the exact words it came from so a grown-up can check it. Go at
-        whatever speed feels right — there is no rush and no score to beat.
+        Each programme is presented one step at a time, with an illustration,
+        the recommended repetitions and hold time, and the original description
+        it was taken from so it can be checked against the source.
       </p>
-      <div class="hero-stats">
-        <div class="hstat"><b id="stat-progs">–</b><span>Programmes</span></div>
-        <div class="hstat"><b id="stat-steps">–</b><span>Steps in total</span></div>
-        <div class="hstat"><b id="stat-src">–</b><span>NHS-sourced</span></div>
-      </div>
     </div>
+
+    <div class="filters" id="filters" role="group" aria-label="Filter by area"></div>
 
     <div class="grid" id="library-grid"></div>
-
-    <div class="card mt">
-      <h2>👨‍👩‍👧 For grown-ups</h2>
-      <p class="small">
-        The exercise content here is adapted from published NHS paediatric
-        physiotherapy resources, each linked on its own page. This is a student
-        project and it is <strong>not</strong> a medical device and
-        <strong>not</strong> a substitute for your own physiotherapist's advice.
-        If your child has been given a specific programme, follow that one.
-        Stop any exercise that causes pain and seek advice.
-      </p>
-    </div>
   </section>
 
   <!-- ============================================================ SESSION -->
@@ -455,13 +387,14 @@ textarea:focus, input[type="text"]:focus { border-color: var(--blue); }
 
   <!-- ============================================================ BUILDER -->
   <section class="panel" id="panel-builder" role="tabpanel" hidden>
-    <div class="hero">
-      <h1>Add your own exercise ✏️</h1>
+    <div class="pagehead">
+      <div class="eyebrow">Custom programme</div>
+      <h1>Add your own exercise description</h1>
       <p>
-        Type or paste any exercise description — from a physiotherapy leaflet, a
-        letter, or in your own words — and the splitter will turn it into
-        numbered steps. Your original text is never changed or thrown away, and
-        every step is shown with how confident the splitter is about it.
+        Enter a description from a physiotherapy leaflet, a clinic letter, or in
+        your own words. It will be separated into numbered steps, with any
+        repetitions, hold times and safety notes identified. The original text is
+        kept alongside so the two can be compared.
       </p>
     </div>
 
@@ -469,78 +402,27 @@ textarea:focus, input[type="text"]:focus { border-color: var(--blue); }
       <div class="card">
         <label class="fld" for="builder-in">Exercise description</label>
         <p class="hint">
-          Whole paragraphs are fine. If you already have numbered steps, they
-          will be kept exactly as you wrote them.
+          Full paragraphs are fine. Descriptions that are already numbered or
+          bulleted will keep the structure you entered.
         </p>
         <textarea id="builder-in" placeholder="For example: Lie on your back with your knees bent and feet flat. Squeeze your bottom and lift your hips until they line up with your knees. Hold for 5 seconds, then lower slowly. Repeat 10 times."></textarea>
         <div class="row mt">
-          <button class="btn btn-primary" id="split-btn" type="button">✂️ Split it into steps</button>
-          <button class="btn btn-ghost" id="clear-btn" type="button">Clear</button>
+          <button class="btn btn-primary" id="split-btn" type="button">Separate into steps</button>
+          <button class="btn" id="clear-btn" type="button">Clear</button>
         </div>
 
-        <p class="small muted mt"><strong>Try an example:</strong></p>
-        <div class="row">
-          <button class="btn btn-ghost btn-sm" type="button"
-            data-sample="Lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee. Repeat 10 times. Stop if pain becomes worse and seek advice from a healthcare professional.">NHS ankle flexion</button>
-          <button class="btn btn-ghost btn-sm" type="button"
+        <p class="small muted mt" style="margin-bottom:8px"><strong>Examples</strong></p>
+        <div class="samples">
+          <button class="btn btn-sm" type="button"
+            data-sample="Lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee. Repeat 10 times. Stop if pain becomes worse and seek advice from a healthcare professional.">Continuous prose</button>
+          <button class="btn btn-sm" type="button"
             data-sample="1. Kneel on the floor with your knees apart.&#10;2. Sit back onto your heels.&#10;3. Fold forward and rest your tummy between your thighs.&#10;4. Hold for 20 seconds and breathe slowly.">Already numbered</button>
-          <button class="btn btn-ghost btn-sm" type="button"
-            data-sample="Start on your hands and knees with your wrists under your shoulders. Breathe in and drop your tummy towards the floor, lifting your chest. Breathe out and round your back up towards the ceiling, tucking your chin. Repeat ten times, moving slowly.">Cat–Cow prose</button>
+          <button class="btn btn-sm" type="button"
+            data-sample="Lie on your back with legs bent and back flattened into the bed. Squeeze your bottom and roll your bottom and back off the floor. Hold for 5 seconds and then lower back down. Repeat 10 to 12 times. If you find the exercises cause you more pain please stop and seek advice from a healthcare professional.">With a safety note</button>
         </div>
       </div>
 
       <div class="card" id="builder-out" aria-live="polite"></div>
-    </div>
-
-    <div class="card mt">
-      <h2>❓ Is this an AI language model?</h2>
-      <p class="small">
-        <strong>No.</strong> The splitter is a rule-based linguistic engine: it
-        segments sentences, splits them on connecting words like
-        <em>“then”</em> only when both halves read as instructions, classifies
-        each fragment as an action, a position, a hold, a repetition count or a
-        safety note, and pulls out numbers like “hold for 5 seconds” and
-        “repeat 10 times”. It is fully deterministic, runs entirely in your
-        browser, and makes no network requests.
-      </p>
-      <p class="small">
-        A language model would handle messier, more conversational descriptions
-        better. The code has a defined adapter interface for one, but it is
-        <strong>not connected to any model</strong> — see the
-        <em>What's real</em> tab for exactly what that would require.
-      </p>
-    </div>
-  </section>
-
-  <!-- ============================================================ HONESTY -->
-  <section class="panel" id="panel-honesty" role="tabpanel" hidden>
-    <div class="hero">
-      <h1>What's actually built 🔍</h1>
-      <p>
-        Every feature below is labelled honestly: fully built, partly built, or
-        not built at all. Where something is not built, the reason and the next
-        step are stated. Nothing here is described as working when it is not.
-      </p>
-      <div class="hero-stats" id="honesty-counts"></div>
-    </div>
-
-    <div class="card">
-      <table class="htable">
-        <thead>
-          <tr><th style="width:28%">Feature</th><th style="width:12%">Status</th><th>What that means</th></tr>
-        </thead>
-        <tbody id="honesty-body"></tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>🔜 What we would do next</h2>
-      <ol class="small">
-        <li><strong>Connect a language model to the splitter.</strong> Needs a server-side proxy holding the API key, a schema-constrained prompt, validation of the returned JSON, and the rule-based splitter kept as the fallback. The safety question — a model inventing an instruction that was not in the source — is why the original description is already displayed beside the steps.</li>
-        <li><strong>Live pose feedback.</strong> Run landmark detection on-device, compare joint angles against the target pose for the current step, and give a simple “try lifting a bit higher” prompt. Requires camera consent handling and an ethics amendment before any child uses it.</li>
-        <li><strong>Save progress.</strong> A small backend with accounts so a child's history persists and a physiotherapist can see adherence between appointments.</li>
-        <li><strong>Evaluate with real families.</strong> Nothing here has been tested with a child or a clinician. That is the largest gap in the whole project.</li>
-      </ol>
     </div>
   </section>
 
@@ -549,18 +431,24 @@ textarea:focus, input[type="text"]:focus { border-color: var(--blue); }
 <footer class="foot">
   <div class="wrap">
     <p>
-      <strong>AI4Mobility</strong> — A60, MSc AI Research and Development Project (55-708252),
-      Sheffield Hallam University. Team Deepminds.
+      <strong>AI4Mobility</strong> — Project A60, MSc AI Research and Development
+      Project (55-708252), Sheffield Hallam University.
     </p>
     <p>
-      Exercise content adapted from
-      <a href="https://library.sheffieldchildrens.nhs.uk/general-lower-limb-exercises/" target="_blank" rel="noopener">Sheffield Children's NHS Foundation Trust — General lower limb exercises</a>,
+      Exercise content adapted with attribution from
+      <a href="https://library.sheffieldchildrens.nhs.uk/general-lower-limb-exercises/" target="_blank" rel="noopener">General lower limb exercises</a>,
       <a href="https://library.sheffieldchildrens.nhs.uk/core-and-hip-stability-exercises/" target="_blank" rel="noopener">Core and hip stability exercises</a>,
-      <a href="https://library.sheffieldchildrens.nhs.uk/calf-control-exercises/" target="_blank" rel="noopener">Calf control exercises</a>
-      and <a href="https://www.yogabasics.com/asana/threading-the-needle/" target="_blank" rel="noopener">Yoga Basics — Threading the Needle</a>.
+      <a href="https://library.sheffieldchildrens.nhs.uk/glute-strengthening/" target="_blank" rel="noopener">Glute strengthening</a>,
+      <a href="https://library.sheffieldchildrens.nhs.uk/calf-control-exercises/" target="_blank" rel="noopener">Calf control exercises</a> and
+      <a href="https://library.sheffieldchildrens.nhs.uk/wrist-exercises/" target="_blank" rel="noopener">Wrist exercises</a>
+      (Sheffield Children's NHS Foundation Trust), and
+      <a href="https://www.yogabasics.com/asana/threading-the-needle/" target="_blank" rel="noopener">Yoga Basics — Threading the Needle</a>.
     </p>
     <p>
-      Student project. Not a medical device. Not a substitute for professional advice.
+      This is a student project. It is not a medical device and is not a
+      substitute for advice from a qualified physiotherapist. Where a child has
+      been given a specific programme by a clinician, that programme should be
+      followed. Stop any exercise that causes pain and seek advice.
     </p>
   </div>
 </footer>
@@ -569,375 +457,581 @@ textarea:focus, input[type="text"]:focus { border-color: var(--blue); }
 /* AUTO-GENERATED by platform/build.py from data/exercises.json.
  * Do not edit this file directly — edit the JSON and re-run the build. */
 window.AI4M_DATA = {
-  "schema_version": "2.0",
+  "schema_version": "3.0",
   "generated_for": "A60 - AI4Mobility: A Multimodal Assistive Platform for Parents Supporting Children with Mobility Difficulties",
-  "note": "Each programme stores the ORIGINAL source description verbatim in `original_description`. The `steps` array is the output of the step-splitting engine, reviewed by hand. Both are shown in the interface so a parent can compare them.",
+  "note": "Each programme stores the original source description verbatim in `original_description`. The `steps` array is the output of the step-splitting engine, reviewed against the source. Both are displayed in the interface.",
   "programmes": [
     {
-      "id": "childs-pose",
-      "title": "Child's Pose",
-      "also_called": "Balasana",
-      "family": "Stretch and relax",
-      "icon": "🐢",
-      "colour": "aqua",
-      "difficulty": 1,
-      "duration_min": 2,
-      "why_kids_like_it": "You get to curl up like a sleepy turtle hiding in its shell.",
-      "goal": "Gently lengthens the lower back and hips and gives a calm resting position between harder exercises.",
-      "source_name": "Common therapeutic resting posture; described in paediatric and adult stretch programmes",
-      "source_url": "",
-      "evidence_label": "Described from standard practice — not copied from a single NHS leaflet",
-      "original_description": "Kneel on the floor with your knees apart and your big toes touching. Sit back onto your heels, then fold forward and rest your tummy between your thighs. Stretch your arms out in front of you along the floor and let your forehead rest down. Breathe slowly and hold the position, then walk your hands back and sit up.",
-      "safety": "Stop if there is knee or hip pain. A cushion under the hips or knees makes it easier.",
-      "steps": [
-        {
-          "n": 1,
-          "text": "Kneel on the floor with your knees apart and your big toes touching.",
-          "hold_s": 0,
-          "pose": "kneel",
-          "cue": "Knees wide like a frog."
-        },
-        {
-          "n": 2,
-          "text": "Sit back onto your heels.",
-          "hold_s": 0,
-          "pose": "sit_heels",
-          "cue": "Bottom down to your feet."
-        },
-        {
-          "n": 3,
-          "text": "Fold forward and rest your tummy between your thighs.",
-          "hold_s": 0,
-          "pose": "fold",
-          "cue": "Curl up small like a turtle."
-        },
-        {
-          "n": 4,
-          "text": "Stretch your arms out in front of you along the floor and let your forehead rest down.",
-          "hold_s": 0,
-          "pose": "arms_long",
-          "cue": "Long arms, sleepy head."
-        },
-        {
-          "n": 5,
-          "text": "Breathe slowly and hold the position.",
-          "hold_s": 20,
-          "pose": "arms_long",
-          "cue": "Big slow breaths."
-        },
-        {
-          "n": 6,
-          "text": "Walk your hands back and sit up.",
-          "hold_s": 0,
-          "pose": "kneel",
-          "cue": "Slowly wake up."
-        }
-      ]
-    },
-    {
-      "id": "cat-cow",
-      "title": "Cat–Cow Stretch",
-      "also_called": "Marjaryasana–Bitilasana",
-      "family": "Stretch and mobility",
-      "icon": "🐱",
-      "colour": "orange",
-      "difficulty": 1,
-      "duration_min": 3,
-      "why_kids_like_it": "You get to be a grumpy cat and then a happy cow, over and over.",
-      "goal": "Moves the spine through bending and arching to improve back mobility and body awareness.",
-      "source_name": "Widely used paediatric mobility exercise; taught as a two-part flow",
-      "source_url": "",
-      "evidence_label": "Described from standard practice — not copied from a single NHS leaflet",
-      "original_description": "Start on your hands and knees with your wrists under your shoulders and your knees under your hips. Breathe in and drop your tummy towards the floor, lifting your chest and looking gently forwards — this is Cow. Breathe out and round your back up towards the ceiling, tucking your chin towards your chest — this is Cat. Move slowly between the two positions and repeat ten times.",
-      "safety": "Move slowly and only as far as is comfortable. Stop if there is neck or back pain.",
-      "steps": [
-        {
-          "n": 1,
-          "text": "Start on your hands and knees with your wrists under your shoulders and your knees under your hips.",
-          "hold_s": 0,
-          "pose": "table",
-          "cue": "Strong table, flat back."
-        },
-        {
-          "n": 2,
-          "text": "Breathe in and drop your tummy towards the floor, lifting your chest and looking gently forwards.",
-          "hold_s": 3,
-          "pose": "cow",
-          "cue": "Happy cow — tummy down."
-        },
-        {
-          "n": 3,
-          "text": "Breathe out and round your back up towards the ceiling, tucking your chin towards your chest.",
-          "hold_s": 3,
-          "pose": "cat",
-          "cue": "Grumpy cat — back up high."
-        },
-        {
-          "n": 4,
-          "text": "Move slowly between the two positions and repeat ten times.",
-          "hold_s": 0,
-          "reps": 10,
-          "pose": "flow",
-          "cue": "Cow … cat … cow … cat."
-        }
-      ]
-    },
-    {
-      "id": "thread-the-needle",
-      "title": "Thread the Needle",
-      "also_called": "Parsva Balasana",
-      "family": "Stretch and mobility",
-      "icon": "🧵",
-      "colour": "magenta",
-      "difficulty": 2,
-      "duration_min": 3,
-      "why_kids_like_it": "Your arm sneaks through a gap like thread going through a needle.",
-      "goal": "Stretches the shoulders, arms, upper back and neck, and adds a gentle rotation to the upper spine.",
-      "source_name": "Yoga Basics — Threading the Needle",
-      "source_url": "https://www.yogabasics.com/asana/threading-the-needle/",
-      "evidence_label": "Instructions adapted from the cited source",
-      "original_description": "Start in Table pose on hands and knees, then slide the right hand between the left hand and left knee. Slide the arm all the way out to the left so that the right shoulder and side of the head rest comfortably on the floor. Inhale and reach the left hand up towards the ceiling. Breathe and hold for 3 to 6 breaths. Release by exhaling your palm back down and slowly inhaling to return to Table pose. Repeat on the opposite side.",
-      "safety": "Avoid if there is recent or chronic injury to the knees, shoulders or neck. A folded blanket under the knees protects them from pressure.",
-      "steps": [
-        {
-          "n": 1,
-          "text": "Start in Table pose on hands and knees.",
-          "hold_s": 0,
-          "pose": "table",
-          "cue": "Strong table again."
-        },
-        {
-          "n": 2,
-          "text": "Slide the right hand between the left hand and left knee.",
-          "hold_s": 0,
-          "pose": "thread_start",
-          "cue": "Sneak your hand through the gap."
-        },
-        {
-          "n": 3,
-          "text": "Slide the arm all the way out to the left so that the right shoulder and side of the head rest comfortably on the floor.",
-          "hold_s": 0,
-          "pose": "thread",
-          "cue": "Rest your cheek on the floor."
-        },
-        {
-          "n": 4,
-          "text": "Inhale and reach the left hand up towards the ceiling.",
-          "hold_s": 0,
-          "pose": "thread_reach",
-          "cue": "Point at the sky."
-        },
-        {
-          "n": 5,
-          "text": "Breathe and hold for 3 to 6 breaths.",
-          "hold_s": 20,
-          "pose": "thread_reach",
-          "cue": "Count your breaths."
-        },
-        {
-          "n": 6,
-          "text": "Exhale your palm back down and slowly inhale to return to Table pose.",
-          "hold_s": 0,
-          "pose": "table",
-          "cue": "Come back up."
-        },
-        {
-          "n": 7,
-          "text": "Repeat on the opposite side.",
-          "hold_s": 0,
-          "pose": "thread_mirror",
-          "cue": "Now the other arm."
-        }
-      ]
-    },
-    {
-      "id": "nhs-lower-limb",
+      "id": "lower-limb",
       "title": "Lower Limb Exercises",
-      "also_called": "NHS general lower limb guide",
-      "family": "Strength — legs",
-      "icon": "🦵",
-      "colour": "blue",
-      "difficulty": 2,
+      "subtitle": "General range of movement and strengthening",
+      "family": "Lower limb",
+      "position": "Lying",
+      "difficulty": 1,
       "duration_min": 10,
-      "why_kids_like_it": "Six quick leg missions you can do lying down.",
-      "goal": "General lower limb range of movement and strengthening, done lying down so it is accessible from bed.",
+      "goal": "General lower limb range of movement and strengthening. Performed lying down, so the programme remains accessible from a bed.",
       "source_name": "Sheffield Children's NHS Foundation Trust — General lower limb exercises",
       "source_url": "https://library.sheffieldchildrens.nhs.uk/general-lower-limb-exercises/",
-      "evidence_label": "Instructions adapted from the cited NHS source",
       "original_description": "Ankle flexion: lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee. Repeat 10 times. Quadriceps contraction: lay on your back with your legs outstretched and your foot and toes pointing upward. Push your knee down firmly against the bed and hold for 5 seconds. Repeat 10 times. Glute squeeze: lay on your back with legs outstretched. Squeeze your bottom firmly together, hold for 5 seconds then relax. Repeat 10 times. Knee bending: lay on your back or sit. Bend your knee by bringing your heel towards your bottom, then return to the starting position. Repeat 10 times. Hip abduction: lay on your back with your legs together. Keeping your leg straight, bring your leg out to the side and return to the starting position. Make sure that you keep your knee and foot in line and your toes pointing upwards. Repeat 10 times. Prone lying: lay on your tummy with your head and arms positioned comfortably. Make sure your hips are level and in contact with the bed. Lie for 30 minutes.",
       "safety": "These are general exercises. Follow the specific programme given by your own physiotherapist. Stop and seek advice if pain gets worse.",
       "steps": [
         {
           "n": 1,
-          "text": "Ankle flexion: lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee.",
+          "title": "Ankle flexion",
+          "text": "Lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee.",
           "hold_s": 0,
           "reps": 10,
-          "pose": "supine_ankle",
-          "cue": "Point … and pull up."
+          "pose": "supine_ankle"
         },
         {
           "n": 2,
-          "text": "Quadriceps contraction: with your legs outstretched and toes pointing upward, push your knee down firmly against the bed.",
+          "title": "Quadriceps contraction",
+          "text": "With your legs outstretched and toes pointing upward, push your knee down firmly against the bed.",
           "hold_s": 5,
           "reps": 10,
-          "pose": "supine_quad",
-          "cue": "Squash the bed with your knee."
+          "pose": "supine_quad"
         },
         {
           "n": 3,
-          "text": "Glute squeeze: lay on your back with legs outstretched and squeeze your bottom firmly together, then relax.",
+          "title": "Glute squeeze",
+          "text": "Lay on your back with legs outstretched and squeeze your bottom firmly together, then relax.",
           "hold_s": 5,
           "reps": 10,
-          "pose": "supine_glute",
-          "cue": "Squeeze … and let go."
+          "pose": "supine_glute"
         },
         {
           "n": 4,
-          "text": "Knee bending: lay on your back or sit, then bend your knee by bringing your heel towards your bottom and return to the start.",
+          "title": "Knee bending",
+          "text": "Lay on your back or sit, then bend your knee by bringing your heel towards your bottom and return to the start.",
           "hold_s": 0,
           "reps": 10,
-          "pose": "knee_bend",
-          "cue": "Heel to your bottom."
+          "pose": "knee_bend"
         },
         {
           "n": 5,
-          "text": "Hip abduction: lay on your back with legs together. Keeping your leg straight, bring your leg out to the side and return. Keep your knee and foot in line and your toes pointing upwards.",
+          "title": "Hip abduction",
+          "text": "Lay on your back with legs together. Keeping your leg straight, bring your leg out to the side and return. Keep your knee and foot in line and your toes pointing upwards.",
           "hold_s": 0,
           "reps": 10,
-          "pose": "hip_abduct",
-          "cue": "Slide your leg out sideways."
+          "pose": "hip_abduct"
         },
         {
           "n": 6,
-          "text": "Prone lying: lay on your tummy with your head and arms comfortable and your hips level and in contact with the bed.",
+          "title": "Prone lying",
+          "text": "Lay on your tummy with your head and arms comfortable and your hips level and in contact with the bed.",
           "hold_s": 1800,
-          "pose": "prone",
-          "cue": "Rest on your tummy."
+          "pose": "prone"
         }
       ]
     },
     {
-      "id": "paediatric-core-hip",
-      "title": "Paediatric Physiotherapy Exercises",
-      "also_called": "Core and hip stability",
-      "family": "Strength — core and hips",
-      "icon": "💪",
-      "colour": "green",
+      "id": "core-hip-stability",
+      "title": "Core and Hip Stability",
+      "subtitle": "Paediatric physiotherapy programme",
+      "family": "Core and hips",
+      "position": "Mixed",
       "difficulty": 3,
       "duration_min": 12,
-      "why_kids_like_it": "Seven strength challenges, including one called the Dead Bug.",
-      "goal": "Builds core and hip stability, which supports balance, walking and the harder movements in the other programmes.",
+      "goal": "Builds core and hip stability, which underpins balance, walking and the more demanding movements in the other programmes.",
       "source_name": "Sheffield Children's NHS Foundation Trust — Core and hip stability exercises",
       "source_url": "https://library.sheffieldchildrens.nhs.uk/core-and-hip-stability-exercises/",
-      "evidence_label": "Instructions adapted from the cited NHS source",
       "original_description": "All exercises should be performed 10 times, 3 to 4 times daily throughout the day, and all movements should be slow and smooth. Hip clams: lie on your side with the affected side on top, bend both legs and keep your pelvis level. Slowly lift your top knee away from the bottom knee, keeping feet and ankles together, then lower back down. Bridging: lie on your back with knees bent and feet apart and firmly on the surface. Squeeze your buttocks together and push through your heels, raising your bottom until your hips line up with your knees. Hold for 5 seconds. Four point kneeling: on hands and knees with wrists below shoulders and knees below hips, pull your stomach up and in, then extend one leg straight behind and hold for 5 seconds. Repeat on the opposite leg. One leg stands: stand upright on the affected leg using support if needed, keep your pelvis level and hold for 5 to 10 seconds. Hip hitching: standing upright, keep your pelvis level, lift your hip towards your shoulder and hold for 5 seconds. Dead bug: lie on your back with arms extended straight above and legs bent at right angles, then extend one arm overhead while lowering the opposite leg and return. Four point hip extension: lie on your stomach, bend the affected knee to a right angle and slowly raise your foot towards the ceiling, holding for 5 seconds.",
       "safety": "If pain becomes worse, stop the exercises and seek advice from a healthcare professional. Only perform the movements prescribed for your current stage.",
       "steps": [
         {
           "n": 1,
-          "text": "Hip clams: lie on your side with both legs bent and your pelvis level. Slowly lift your top knee away from the bottom knee, keeping feet and ankles together, then lower back down.",
+          "title": "Hip clams",
+          "text": "Lie on your side with both legs bent and your pelvis level. Slowly lift your top knee away from the bottom knee, keeping feet and ankles together, then lower back down.",
           "hold_s": 0,
           "reps": 10,
-          "pose": "clam",
-          "cue": "Open like a clam shell."
+          "pose": "clam"
         },
         {
           "n": 2,
-          "text": "Bridging: lie on your back with knees bent and feet firmly down. Squeeze your buttocks and push through your heels, raising your bottom until your hips line up with your knees.",
+          "title": "Bridging",
+          "text": "Lie on your back with knees bent and feet firmly down. Squeeze your buttocks and push through your heels, raising your bottom until your hips line up with your knees.",
           "hold_s": 5,
           "reps": 10,
-          "pose": "bridge",
-          "cue": "Build a bridge with your hips."
+          "pose": "bridge"
         },
         {
           "n": 3,
-          "text": "Four point kneeling: on hands and knees, pull your stomach up and in, then extend one leg straight behind you. Repeat on the opposite leg.",
+          "title": "Four point kneeling",
+          "text": "On hands and knees, pull your stomach up and in, then extend one leg straight behind you. Repeat on the opposite leg.",
           "hold_s": 5,
           "reps": 10,
-          "pose": "quadruped_leg",
-          "cue": "Long leg like a plane wing."
+          "pose": "quadruped_leg"
         },
         {
           "n": 4,
-          "text": "One leg stands: stand upright on one leg, using support if needed, and keep your pelvis level.",
+          "title": "One leg stands",
+          "text": "Stand upright on one leg, using support if needed, and keep your pelvis level.",
           "hold_s": 10,
           "reps": 10,
-          "pose": "one_leg",
-          "cue": "Stand tall like a flamingo."
+          "pose": "one_leg"
         },
         {
           "n": 5,
-          "text": "Hip hitching: standing upright with your pelvis level, lift your hip towards your shoulder.",
+          "title": "Hip hitching",
+          "text": "Standing upright with your pelvis level, lift your hip towards your shoulder.",
           "hold_s": 5,
           "reps": 10,
-          "pose": "hip_hitch",
-          "cue": "Shrug with your hip."
+          "pose": "hip_hitch"
         },
         {
           "n": 6,
-          "text": "Dead bug: lie on your back with arms straight above and legs bent at right angles. Extend one arm overhead while lowering the opposite leg, then return.",
+          "title": "Dead bug",
+          "text": "Lie on your back with arms straight above and legs bent at right angles. Extend one arm overhead while lowering the opposite leg, then return.",
           "hold_s": 0,
           "reps": 10,
-          "pose": "dead_bug",
-          "cue": "Wiggle like an upside-down bug."
+          "pose": "dead_bug"
         },
         {
           "n": 7,
-          "text": "Four point hip extension: lie on your stomach, bend your knee to a right angle and slowly raise your foot towards the ceiling.",
+          "title": "Four point hip extension",
+          "text": "Lie on your stomach, bend your knee to a right angle and slowly raise your foot towards the ceiling.",
           "hold_s": 5,
           "reps": 10,
-          "pose": "prone_hip_ext",
-          "cue": "Press your foot at the ceiling."
+          "pose": "prone_hip_ext"
+        }
+      ]
+    },
+    {
+      "id": "glute-strengthening",
+      "title": "Glute Strengthening",
+      "subtitle": "Progressive hip and buttock strengthening",
+      "family": "Hips and glutes",
+      "position": "Mixed",
+      "difficulty": 3,
+      "duration_min": 14,
+      "goal": "Strengthens the gluteal muscles, which control the hip during standing, walking, stairs and single-leg balance.",
+      "source_name": "Sheffield Children's NHS Foundation Trust — Glute strengthening",
+      "source_url": "https://library.sheffieldchildrens.nhs.uk/glute-strengthening/",
+      "original_description": "Bridge: lie on your back with legs bent and back flattened into the bed. Squeeze your bottom and roll your bottom and back off the floor. Hold for 5 seconds and then lower back down. Control the movement up and down. Repeat 10 to 12 times. Bridge with leg lift: lie on your back with legs bent and back flattened into the bed. Squeeze your glutes and lift your hips off the floor. Straighten one leg and hold for 3 to 5 seconds. Try to keep your hips level whilst you do this. Lower the foot and return to the start. Repeat 6 times on each side. Thigh lift: lie on your front with one knee bent and a pillow under your hips. Lift your thigh off the floor trying to keep your lower back still so the movement is coming from your bottom. Hold for a second and then relax. Repeat 6 times on each side. Clam: lie on your side with knees bent. Lift your top knee while keeping your feet together. Only lift as far as you can control, stop when you feel the top hip starting to roll back. Keep your torso steady. Continue until the side glute muscle is fatigued, then repeat on the other leg. Step up high: stand at a step with your right foot on it. Step up and lift your left leg, pause for balance, then lower the left leg. Repeat on the same side 10 times, then switch so the left foot is on the step. A higher step increases the difficulty. Chair squat: stand in front of a chair or bed. Lower your bottom down, as if you are going to sit on the chair. Just tap your bottom on the chair and then stand back up tall. Avoid using your arms for assistance. Repeat 10 to 12 times.",
+      "safety": "If you find the exercises cause you more pain please stop the exercises and seek advice from a healthcare professional.",
+      "steps": [
+        {
+          "n": 1,
+          "title": "Bridge",
+          "text": "Lie on your back with legs bent and back flattened down. Squeeze your bottom and roll your bottom and back off the floor, then lower back down with control.",
+          "hold_s": 5,
+          "reps": 11,
+          "pose": "bridge"
+        },
+        {
+          "n": 2,
+          "title": "Bridge with leg lift",
+          "text": "Lift your hips off the floor, then straighten one leg while keeping your hips level. Lower the foot and return to the start.",
+          "hold_s": 4,
+          "reps": 6,
+          "pose": "bridge_leg_lift"
+        },
+        {
+          "n": 3,
+          "title": "Thigh lift",
+          "text": "Lie on your front with one knee bent and a pillow under your hips. Lift your thigh off the floor, keeping your lower back still so the movement comes from your bottom.",
+          "hold_s": 1,
+          "reps": 6,
+          "pose": "thigh_lift"
+        },
+        {
+          "n": 4,
+          "title": "Clam",
+          "text": "Lie on your side with knees bent. Lift your top knee while keeping your feet together. Only lift as far as you can control, and stop when the top hip starts to roll back.",
+          "hold_s": 0,
+          "reps": 12,
+          "pose": "clam"
+        },
+        {
+          "n": 5,
+          "title": "Step up high",
+          "text": "Stand at a step with one foot on it. Step up and lift the other leg, pause for balance, then lower it. Repeat on the same side, then switch.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "step_up"
+        },
+        {
+          "n": 6,
+          "title": "Chair squat",
+          "text": "Stand in front of a chair. Lower your bottom down as if you are going to sit, tap the chair, then stand back up tall without using your arms.",
+          "hold_s": 0,
+          "reps": 11,
+          "pose": "chair_squat"
         }
       ]
     },
     {
       "id": "calf-control",
       "title": "Calf Control",
-      "also_called": "Heel raises and calf work",
-      "family": "Strength — legs",
-      "icon": "🦶",
-      "colour": "yellow",
+      "subtitle": "Gastrocnemius and soleus control",
+      "family": "Lower limb",
+      "position": "Standing",
       "difficulty": 2,
       "duration_min": 6,
-      "why_kids_like_it": "Bonus level — tiptoe like you are sneaking up on someone.",
-      "goal": "Builds calf strength and control, which supports walking, stair climbing and balance.",
+      "goal": "Builds calf strength and control for walking, stair climbing and balance, targeting both calf muscles separately.",
       "source_name": "Sheffield Children's NHS Foundation Trust — Calf control exercises",
       "source_url": "https://library.sheffieldchildrens.nhs.uk/calf-control-exercises/",
-      "evidence_label": "Optional extra programme — title and source verified, step wording written by the team and NOT copied from the leaflet",
-      "optional": true,
-      "original_description": "Stand upright holding a support such as a worktop. Rise up onto your toes slowly and with control, then lower your heels back to the floor slowly. Keep your ankles in line and do not let them roll outwards. Progress by using less support and then by working one leg at a time.",
-      "safety": "This is an optional extra added by the team. Always use a support until balance is confident. Confirm with your physiotherapist before adding it.",
+      "original_description": "These exercises should be performed 2 times per day. Gastrocnemius: stand on one leg with your leg straight, holding onto a wall or flat surface for balance. Lift up onto your tip toes, as high as you are able, then slowly lower back down. Repeat as many times as you can. Stop if your muscles feel tired or if you lose control of the movement. Soleus: stand on one leg with your knee bent, holding onto a wall or flat surface for balance. Lift your heel so you are standing on your tip toes, as high as possible, keeping your knee still and bent throughout. Slowly lower back down. Repeat as many times as you can. Stop if your muscles tire or you lose control of the movement.",
+      "safety": "Stop if your muscles feel tired or if you lose control of the movement. Always use a wall or flat surface for balance.",
       "steps": [
         {
           "n": 1,
-          "text": "Stand upright holding a support such as a worktop.",
+          "title": "Gastrocnemius raise",
+          "text": "Stand on one leg with your leg straight, holding a wall for balance. Lift up onto your tip toes as high as you are able, then slowly lower back down.",
           "hold_s": 0,
-          "pose": "stand",
-          "cue": "Hold on tight."
+          "reps": 12,
+          "pose": "heel_raise"
         },
         {
           "n": 2,
-          "text": "Rise up onto your toes slowly and with control.",
-          "hold_s": 3,
+          "title": "Soleus raise",
+          "text": "Stand on one leg with your knee bent, holding a wall for balance. Lift your heel as high as possible, keeping the knee still and bent, then slowly lower.",
+          "hold_s": 0,
+          "reps": 12,
+          "pose": "soleus_raise"
+        }
+      ]
+    },
+    {
+      "id": "wrist-hand",
+      "title": "Wrist and Hand Exercises",
+      "subtitle": "Active and assisted wrist movement",
+      "family": "Upper limb",
+      "position": "Seated",
+      "difficulty": 1,
+      "duration_min": 8,
+      "goal": "Maintains wrist range of movement and forearm rotation, both actively and with assistance from the other hand.",
+      "source_name": "Sheffield Children's NHS Foundation Trust — Wrist exercises",
+      "source_url": "https://library.sheffieldchildrens.nhs.uk/wrist-exercises/",
+      "original_description": "Active exercises. Wrist flex: resting your forearm on a table, bring the wrist up and down, trying to bend as far down as you can and bring up as far as you can. Wrist side stretch: move your wrist from side to side. Forearm twist: keep your elbow into your side and turn your palm to face up and face down. Assisted exercises, using your other hand to help. Palm stretch: use your other hand holding the palm to bring back the wrist to feel a stretch. Back of the hand stretch: use your other hand to push down the wrist until you feel a gentle stretch. Prayer wrist stretch: put your hands together as if in prayer to stretch the wrist, keeping your fingers straight. Seated hand pushdown: in a sitting position, place your hands by your side with your fingers pointing behind you and gently push down. Wall push: put your hands flat against a wall and gently push against the wall to feel a stretch.",
+      "safety": "Your therapist will fill in how many repetitions to do and how long to hold each stretch. Move gently and stop at the point of a comfortable stretch, not pain.",
+      "steps": [
+        {
+          "n": 1,
+          "title": "Wrist flex",
+          "text": "Resting your forearm on a table, bring the wrist up and down, bending as far down as you can and up as far as you can.",
+          "hold_s": 0,
           "reps": 10,
-          "pose": "heel_raise",
-          "cue": "Sneaky tiptoes."
+          "pose": "wrist_table"
+        },
+        {
+          "n": 2,
+          "title": "Wrist side stretch",
+          "text": "Move your wrist from side to side.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "wrist_side"
         },
         {
           "n": 3,
-          "text": "Lower your heels back to the floor slowly.",
+          "title": "Forearm twist",
+          "text": "Keep your elbow into your side and turn your palm to face up and then face down.",
           "hold_s": 0,
           "reps": 10,
-          "pose": "stand",
-          "cue": "Down like a slow lift."
+          "pose": "forearm_twist"
         },
         {
           "n": 4,
-          "text": "Keep your ankles in line and do not let them roll outwards.",
+          "title": "Palm stretch",
+          "text": "Use your other hand, holding the palm, to bring the wrist back until you feel a stretch.",
+          "hold_s": 15,
+          "reps": 3,
+          "pose": "palm_stretch"
+        },
+        {
+          "n": 5,
+          "title": "Back of the hand stretch",
+          "text": "Use your other hand to push the wrist down until you feel a gentle stretch.",
+          "hold_s": 15,
+          "reps": 3,
+          "pose": "hand_back_stretch"
+        },
+        {
+          "n": 6,
+          "title": "Prayer wrist stretch",
+          "text": "Put your hands together as if in prayer to stretch the wrist, keeping your fingers straight.",
+          "hold_s": 15,
+          "reps": 3,
+          "pose": "prayer_stretch"
+        },
+        {
+          "n": 7,
+          "title": "Wall push",
+          "text": "Put your hands flat against a wall and gently push against the wall to feel a stretch.",
+          "hold_s": 15,
+          "reps": 3,
+          "pose": "wall_push"
+        }
+      ]
+    },
+    {
+      "id": "childs-pose",
+      "title": "Child's Pose",
+      "subtitle": "Balasana",
+      "family": "Stretch and mobility",
+      "position": "Kneeling",
+      "difficulty": 1,
+      "duration_min": 2,
+      "goal": "Lengthens the lower back and hips and provides a resting position between more demanding exercises.",
+      "source_name": "Standard therapeutic resting posture, described from general practice",
+      "source_url": "",
+      "original_description": "Kneel on the floor with your knees apart and your big toes touching. Sit back onto your heels, then fold forward and rest your tummy between your thighs. Stretch your arms out in front of you along the floor and let your forehead rest down. Breathe slowly and hold the position, then walk your hands back and sit up.",
+      "safety": "Stop if there is knee or hip pain. A cushion under the hips or knees makes the position easier to hold.",
+      "steps": [
+        {
+          "n": 1,
+          "title": "Kneel",
+          "text": "Kneel on the floor with your knees apart and your big toes touching.",
           "hold_s": 0,
-          "pose": "stand",
-          "cue": "Straight ankles."
+          "pose": "kneel"
+        },
+        {
+          "n": 2,
+          "title": "Sit back",
+          "text": "Sit back onto your heels.",
+          "hold_s": 0,
+          "pose": "sit_heels"
+        },
+        {
+          "n": 3,
+          "title": "Fold forward",
+          "text": "Fold forward and rest your tummy between your thighs.",
+          "hold_s": 0,
+          "pose": "fold"
+        },
+        {
+          "n": 4,
+          "title": "Extend the arms",
+          "text": "Stretch your arms out in front of you along the floor and let your forehead rest down.",
+          "hold_s": 0,
+          "pose": "arms_long"
+        },
+        {
+          "n": 5,
+          "title": "Hold",
+          "text": "Breathe slowly and hold the position.",
+          "hold_s": 20,
+          "pose": "arms_long"
+        },
+        {
+          "n": 6,
+          "title": "Return",
+          "text": "Walk your hands back and sit up.",
+          "hold_s": 0,
+          "pose": "kneel"
+        }
+      ]
+    },
+    {
+      "id": "cat-cow",
+      "title": "Cat–Cow Stretch",
+      "subtitle": "Marjaryasana–Bitilasana",
+      "family": "Stretch and mobility",
+      "position": "Four point kneeling",
+      "difficulty": 1,
+      "duration_min": 3,
+      "goal": "Moves the spine through flexion and extension to improve back mobility and body awareness.",
+      "source_name": "Widely used mobility exercise, described from general practice",
+      "source_url": "",
+      "original_description": "Start on your hands and knees with your wrists under your shoulders and your knees under your hips. Breathe in and drop your tummy towards the floor, lifting your chest and looking gently forwards. Breathe out and round your back up towards the ceiling, tucking your chin towards your chest. Move slowly between the two positions and repeat ten times.",
+      "safety": "Move slowly and only as far as is comfortable. Stop if there is neck or back pain.",
+      "steps": [
+        {
+          "n": 1,
+          "title": "Four point kneeling",
+          "text": "Start on your hands and knees with your wrists under your shoulders and your knees under your hips.",
+          "hold_s": 0,
+          "pose": "table"
+        },
+        {
+          "n": 2,
+          "title": "Cow",
+          "text": "Breathe in and drop your tummy towards the floor, lifting your chest and looking gently forwards.",
+          "hold_s": 3,
+          "pose": "cow"
+        },
+        {
+          "n": 3,
+          "title": "Cat",
+          "text": "Breathe out and round your back up towards the ceiling, tucking your chin towards your chest.",
+          "hold_s": 3,
+          "pose": "cat"
+        },
+        {
+          "n": 4,
+          "title": "Flow between the two",
+          "text": "Move slowly between the two positions.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "flow"
+        }
+      ]
+    },
+    {
+      "id": "thread-the-needle",
+      "title": "Thread the Needle",
+      "subtitle": "Parsva Balasana",
+      "family": "Stretch and mobility",
+      "position": "Four point kneeling",
+      "difficulty": 2,
+      "duration_min": 3,
+      "goal": "Stretches the shoulders, arms, upper back and neck, and adds gentle rotation to the upper spine.",
+      "source_name": "Yoga Basics — Threading the Needle",
+      "source_url": "https://www.yogabasics.com/asana/threading-the-needle/",
+      "original_description": "Start in Table pose on hands and knees, then slide the right hand between the left hand and left knee. Slide the arm all the way out to the left so that the right shoulder and side of the head rest comfortably on the floor. Inhale and reach the left hand up towards the ceiling. Breathe and hold for 3 to 6 breaths. Release by exhaling your palm back down and slowly inhaling to return to Table pose. Repeat on the opposite side.",
+      "safety": "Avoid if there is recent or chronic injury to the knees, shoulders or neck. A folded blanket under the knees protects them from pressure.",
+      "steps": [
+        {
+          "n": 1,
+          "title": "Four point kneeling",
+          "text": "Start in Table pose on hands and knees.",
+          "hold_s": 0,
+          "pose": "table"
+        },
+        {
+          "n": 2,
+          "title": "Thread the arm through",
+          "text": "Slide the right hand between the left hand and left knee.",
+          "hold_s": 0,
+          "pose": "thread_start"
+        },
+        {
+          "n": 3,
+          "title": "Lower the shoulder",
+          "text": "Slide the arm all the way out to the left so that the right shoulder and side of the head rest comfortably on the floor.",
+          "hold_s": 0,
+          "pose": "thread"
+        },
+        {
+          "n": 4,
+          "title": "Reach upwards",
+          "text": "Inhale and reach the left hand up towards the ceiling.",
+          "hold_s": 0,
+          "pose": "thread_reach"
+        },
+        {
+          "n": 5,
+          "title": "Hold",
+          "text": "Breathe and hold for three to six breaths.",
+          "hold_s": 20,
+          "pose": "thread_reach"
+        },
+        {
+          "n": 6,
+          "title": "Return",
+          "text": "Exhale your palm back down and slowly inhale to return to Table pose.",
+          "hold_s": 0,
+          "pose": "table"
+        },
+        {
+          "n": 7,
+          "title": "Repeat on the other side",
+          "text": "Repeat the sequence on the opposite side.",
+          "hold_s": 0,
+          "pose": "thread_mirror"
+        }
+      ]
+    },
+    {
+      "id": "standing-balance",
+      "title": "Standing Balance",
+      "subtitle": "Static and dynamic balance practice",
+      "family": "Balance",
+      "position": "Standing",
+      "difficulty": 2,
+      "duration_min": 7,
+      "goal": "Practises static and moving balance, progressing from a wide base of support to single-leg stance.",
+      "source_name": "Standard balance progression, described from general practice",
+      "source_url": "",
+      "original_description": "Stand tall with your feet together and hold the position, using a support nearby if you need it. Then place one foot directly in front of the other, heel to toe, and hold. Next stand on one leg, keeping your pelvis level, and hold before swapping sides. Finally walk in a straight line placing your heel directly in front of the toes of the other foot each step. Progress each exercise by reducing how much you hold on, and then by closing your eyes if it is safe to do so.",
+      "safety": "Always practise beside a wall, worktop or chair. Have someone nearby when trying a harder progression for the first time. Do not close your eyes unless a supervising adult is present.",
+      "steps": [
+        {
+          "n": 1,
+          "title": "Feet together",
+          "text": "Stand tall with your feet together and hold the position, using a support nearby if you need it.",
+          "hold_s": 20,
+          "reps": 3,
+          "pose": "stand"
+        },
+        {
+          "n": 2,
+          "title": "Heel to toe stand",
+          "text": "Place one foot directly in front of the other, heel to toe, and hold.",
+          "hold_s": 20,
+          "reps": 3,
+          "pose": "tandem_stand"
+        },
+        {
+          "n": 3,
+          "title": "Single leg stand",
+          "text": "Stand on one leg, keeping your pelvis level, then swap sides.",
+          "hold_s": 10,
+          "reps": 5,
+          "pose": "one_leg"
+        },
+        {
+          "n": 4,
+          "title": "Heel to toe walking",
+          "text": "Walk in a straight line, placing your heel directly in front of the toes of the other foot each step.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "heel_toe_walk"
+        }
+      ]
+    },
+    {
+      "id": "seated-upper-body",
+      "title": "Seated Upper Body",
+      "subtitle": "Shoulder, neck and trunk mobility",
+      "family": "Upper limb",
+      "position": "Seated",
+      "difficulty": 1,
+      "duration_min": 6,
+      "goal": "Maintains shoulder, neck and trunk mobility from a seated position, suitable when standing exercises are not appropriate.",
+      "source_name": "Standard seated mobility routine, described from general practice",
+      "source_url": "",
+      "original_description": "Sit tall in a supportive chair with both feet flat on the floor. Roll your shoulders slowly backwards in a full circle, then forwards. Reach both arms up above your head as far as is comfortable and lower them again. Tilt your head gently towards one shoulder until you feel a stretch along the side of your neck, hold, then repeat on the other side. Finally, with your feet still, turn your shoulders to look behind you on one side, hold, and repeat on the other side.",
+      "safety": "Move slowly and keep within a comfortable range. Stop any movement that causes dizziness, pain or pins and needles.",
+      "steps": [
+        {
+          "n": 1,
+          "title": "Sit tall",
+          "text": "Sit tall in a supportive chair with both feet flat on the floor.",
+          "hold_s": 0,
+          "pose": "seated"
+        },
+        {
+          "n": 2,
+          "title": "Shoulder rolls",
+          "text": "Roll your shoulders slowly backwards in a full circle, then forwards.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "shoulder_roll"
+        },
+        {
+          "n": 3,
+          "title": "Overhead reach",
+          "text": "Reach both arms up above your head as far as is comfortable, then lower them again.",
+          "hold_s": 3,
+          "reps": 10,
+          "pose": "seated_reach"
+        },
+        {
+          "n": 4,
+          "title": "Neck side stretch",
+          "text": "Tilt your head gently towards one shoulder until you feel a stretch along the side of your neck, then repeat on the other side.",
+          "hold_s": 15,
+          "reps": 3,
+          "pose": "neck_stretch"
+        },
+        {
+          "n": 5,
+          "title": "Seated rotation",
+          "text": "Keeping your feet still, turn your shoulders to look behind you on one side, then repeat on the other side.",
+          "hold_s": 10,
+          "reps": 3,
+          "pose": "seated_twist"
         }
       ]
     }
@@ -1392,7 +1486,8 @@ window.AI4M_DATA = {
     ['sho', 'elb'], ['elb', 'wri'],
     ['sho', 'elb2'], ['elb2', 'wri2'],
     ['hip', 'kne'], ['kne', 'ank'], ['ank', 'toe'],
-    ['hip', 'kne2'], ['kne2', 'ank2'], ['ank2', 'toe2']
+    ['hip', 'kne2'], ['kne2', 'ank2'], ['ank2', 'toe2'],
+    ['wri', 'hand'], ['wri2', 'hand2']
   ];
 
   /* ------------------------------------------------------------- pose bank */
@@ -1589,7 +1684,7 @@ window.AI4M_DATA = {
            kne: [150, 100], ank: [150, 128], toe: [164, 131],
            kne2: [156, 100], ank2: [156, 128], toe2: [170, 131] },
       spineCtrl: [98, 100],
-      arrows: [[122, 108, 122, 90]]
+      arrows: [[104, 122, 104, 101]]
     },
     dead_bug: {
       label: 'Dead Bug — opposite arm and leg',
@@ -1618,6 +1713,179 @@ window.AI4M_DATA = {
            kne: [148, 116], ank: [148, 86], toe: [162, 82],
            kne2: [154, 122], ank2: [182, 122], toe2: [192, 128] },
       arrows: [[158, 104, 158, 80]]
+    },
+    bridge_leg_lift: {
+      label: 'Bridge with one leg straightened',
+      floorY: 132,
+      j: { head: [54, 120], neck: [66, 120], sho: [78, 118], hip: [122, 92],
+           elb: [86, 126], wri: [104, 129],
+           kne: [150, 100], ank: [150, 128], toe: [164, 131],
+           kne2: [162, 88], ank2: [188, 82], toe2: [198, 86] },
+      spineCtrl: [98, 100],
+      arrows: [[104, 122, 104, 101], [166, 98, 190, 88]]
+    },
+    thigh_lift: {
+      label: 'Thigh lifted from lying on the front',
+      floorY: 128,
+      j: { head: [56, 116], neck: [68, 116], sho: [78, 116], hip: [120, 116],
+           elb: [58, 106], wri: [36, 104],
+           kne: [150, 104], ank: [150, 78], toe: [164, 74],
+           kne2: [154, 122], ank2: [182, 122], toe2: [192, 128] },
+      arrows: [[136, 118, 146, 102]]
+    },
+    step_up: {
+      label: 'Stepping up onto a step',
+      floorY: 134,
+      j: { head: [98, 24], neck: [98, 36], sho: [98, 44], hip: [100, 82],
+           elb: [88, 64], wri: [86, 86], elb2: [108, 64], wri2: [110, 86],
+           kne: [120, 96], ank: [124, 112], toe: [136, 114],
+           kne2: [96, 106], ank2: [94, 128], toe2: [106, 132] },
+      arrows: [[112, 104, 124, 92]],
+      props: [[112, 114, 152, 134]]
+    },
+    chair_squat: {
+      label: 'Lowering towards a chair',
+      floorY: 134,
+      j: { head: [96, 40], neck: [98, 52], sho: [100, 60], hip: [112, 94],
+           elb: [86, 70], wri: [72, 78], elb2: [104, 70], wri2: [90, 80],
+           kne: [96, 108], ank: [98, 130], toe: [110, 133],
+           kne2: [102, 108], ank2: [104, 130], toe2: [116, 133] },
+      arrows: [[126, 86, 126, 104]],
+      props: [[112, 100, 152, 134]]
+    },
+    soleus_raise: {
+      label: 'Heel raise with the knee bent',
+      floorY: 134,
+      j: { head: [104, 26], neck: [104, 38], sho: [104, 46], hip: [102, 84],
+           elb: [116, 60], wri: [130, 62], elb2: [94, 64], wri2: [92, 86],
+           kne: [112, 106], ank: [104, 122], toe: [118, 133],
+           kne2: [118, 100], ank2: [116, 116], toe2: [128, 120] },
+      arrows: [[98, 128, 98, 112]],
+      props: [[136, 20, 144, 134]]
+    },
+    tandem_stand: {
+      label: 'Heel-to-toe standing',
+      floorY: 134,
+      j: { head: [110, 26], neck: [110, 38], sho: [110, 46], hip: [110, 84],
+           elb: [96, 64], wri: [86, 76], elb2: [124, 64], wri2: [134, 76],
+           kne: [104, 108], ank: [100, 130], toe: [112, 133],
+           kne2: [116, 108], ank2: [120, 130], toe2: [132, 133] }
+    },
+    heel_toe_walk: {
+      label: 'Walking heel to toe in a line',
+      floorY: 134,
+      j: { head: [102, 26], neck: [102, 38], sho: [102, 46], hip: [104, 84],
+           elb: [88, 62], wri: [74, 70], elb2: [120, 62], wri2: [134, 70],
+           kne: [94, 108], ank: [90, 130], toe: [102, 133],
+           kne2: [122, 104], ank2: [130, 126], toe2: [144, 130] },
+      arrows: [[112, 128, 136, 124]]
+    },
+    seated: {
+      label: 'Sitting tall in a chair',
+      floorY: 136,
+      j: { head: [96, 30], neck: [96, 42], sho: [96, 50], hip: [96, 86],
+           elb: [86, 68], wri: [84, 88], elb2: [106, 68], wri2: [108, 88],
+           kne: [128, 88], ank: [130, 116], toe: [142, 134],
+           kne2: [128, 94], ank2: [130, 122], toe2: [142, 135] },
+      props: [[92, 86, 132, 90], [88, 40, 96, 90], [126, 90, 132, 134]]
+    },
+    shoulder_roll: {
+      label: 'Rolling the shoulders',
+      floorY: 136,
+      j: { head: [96, 30], neck: [96, 42], sho: [96, 50], hip: [96, 86],
+           elb: [82, 62], wri: [80, 84], elb2: [110, 62], wri2: [112, 84],
+           kne: [128, 88], ank: [130, 116], toe: [142, 134],
+           kne2: [128, 94], ank2: [130, 122], toe2: [142, 135] },
+      arrows: [[80, 44, 96, 36]],
+      props: [[92, 86, 132, 90], [88, 40, 96, 90], [126, 90, 132, 134]]
+    },
+    seated_reach: {
+      label: 'Reaching both arms overhead',
+      floorY: 136,
+      j: { head: [96, 34], neck: [96, 46], sho: [96, 54], hip: [96, 88],
+           elb: [88, 28], wri: [84, 4], elb2: [106, 28], wri2: [110, 4],
+           kne: [128, 90], ank: [130, 118], toe: [142, 134],
+           kne2: [128, 96], ank2: [130, 124], toe2: [142, 135] },
+      arrows: [[118, 20, 120, 2]],
+      props: [[92, 88, 132, 92], [88, 44, 96, 92], [126, 92, 132, 134]]
+    },
+    neck_stretch: {
+      label: 'Gentle neck side stretch',
+      floorY: 136,
+      j: { head: [84, 32], neck: [96, 44], sho: [96, 52], hip: [96, 88],
+           elb: [86, 70], wri: [84, 90], elb2: [106, 70], wri2: [108, 90],
+           kne: [128, 90], ank: [130, 118], toe: [142, 134],
+           kne2: [128, 96], ank2: [130, 124], toe2: [142, 135] },
+      arrows: [[92, 24, 76, 28]],
+      props: [[92, 88, 132, 92], [88, 42, 96, 92], [126, 92, 132, 134]]
+    },
+    seated_twist: {
+      label: 'Turning the shoulders to look behind',
+      floorY: 136,
+      j: { head: [104, 32], neck: [98, 44], sho: [98, 52], hip: [96, 88],
+           elb: [112, 66], wri: [122, 82], elb2: [84, 64], wri2: [96, 76],
+           kne: [128, 90], ank: [130, 118], toe: [142, 134],
+           kne2: [128, 96], ank2: [130, 124], toe2: [142, 135] },
+      arrows: [[110, 24, 126, 30]],
+      props: [[92, 88, 132, 92], [88, 42, 96, 92], [126, 92, 132, 134]]
+    },
+    wrist_table: {
+      // close-up of the forearm only: a head and torso at this scale read as a
+      // person lying down rather than as a hand exercise
+      label: 'Forearm resting on a table, wrist bending up and down',
+      floorY: 0,
+      j: { sho: [26, 40], elb: [64, 76], wri: [132, 84], hand: [174, 56] },
+      arrows: [[156, 96, 172, 62]],
+      props: [[52, 90, 198, 98]]
+    },
+    wrist_side: {
+      label: 'Wrist moving from side to side',
+      floorY: 0,
+      j: { sho: [26, 40], elb: [64, 76], wri: [132, 84], hand: [178, 68] },
+      arrows: [[172, 46, 186, 92]],
+      props: [[52, 90, 198, 98]]
+    },
+    forearm_twist: {
+      label: 'Elbow at the side, turning the palm',
+      floorY: 134,
+      j: { head: [96, 26], neck: [96, 38], sho: [96, 46], hip: [96, 84],
+           elb: [92, 68], wri: [136, 66], elb2: [102, 68], wri2: [140, 74],
+           kne: [92, 106], ank: [92, 130], toe: [104, 133],
+           kne2: [100, 106], ank2: [100, 130], toe2: [112, 133] },
+      arrows: [[152, 56, 156, 82]]
+    },
+    palm_stretch: {
+      label: 'The other hand eases the wrist back',
+      floorY: 0,
+      j: { sho: [22, 54], elb: [64, 82], wri: [130, 78], hand: [156, 34],
+           elb2: [72, 126], wri2: [128, 106], hand2: [150, 66] },
+      arrows: [[172, 62, 178, 32]]
+    },
+    hand_back_stretch: {
+      label: 'The other hand eases the wrist down',
+      floorY: 0,
+      j: { sho: [22, 44], elb: [64, 72], wri: [130, 80], hand: [156, 124],
+           elb2: [72, 20], wri2: [128, 50], hand2: [150, 92] },
+      arrows: [[172, 96, 178, 126]]
+    },
+    prayer_stretch: {
+      label: 'Palms together in front of the chest',
+      floorY: 134,
+      j: { head: [96, 26], neck: [96, 38], sho: [96, 46], hip: [96, 84],
+           elb: [78, 62], wri: [110, 56], elb2: [114, 62], wri2: [110, 60],
+           kne: [92, 106], ank: [92, 130], toe: [104, 133],
+           kne2: [100, 106], ank2: [100, 130], toe2: [112, 133] },
+      arrows: [[124, 44, 124, 62]]
+    },
+    wall_push: {
+      label: 'Hands flat against a wall',
+      floorY: 134,
+      j: { head: [86, 34], neck: [88, 46], sho: [90, 54], hip: [82, 90],
+           elb: [116, 58], wri: [146, 62], elb2: [116, 66], wri2: [146, 70],
+           kne: [78, 108], ank: [76, 130], toe: [88, 133],
+           kne2: [86, 108], ank2: [84, 130], toe2: [96, 133] },
+      arrows: [[130, 88, 148, 88]],
+      props: [[150, 14, 156, 134]]
     },
     clam: {
       label: 'Side lying — knee opens like a clam',
@@ -1683,7 +1951,9 @@ window.AI4M_DATA = {
     // ---- automatic framing -------------------------------------------------
     // Compute a tight bounding box over everything that will be drawn, so every
     // pose fills its frame consistently instead of floating in white space.
+    // floorY === 0 means this pose has no ground plane (a close-up view).
     const floorY = pose.floorY != null ? pose.floorY : FLOOR_Y;
+    const drawFloor = o.showFloor && floorY !== 0;
     const box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
     function extend(x, y, r) {
       r = r || 0;
@@ -1694,7 +1964,8 @@ window.AI4M_DATA = {
     if (pose.spineCtrl) extend(pose.spineCtrl[0], pose.spineCtrl[1]);
     (pose.arrows || []).forEach(a => { extend(a[0], a[1]); extend(a[2], a[3]); });
     if (pose.pulse) extend(pose.pulse[0], pose.pulse[1], 16);
-    if (o.showFloor) extend(box.x0, floorY), extend(box.x1, floorY);
+    (pose.props || []).forEach(r => { extend(r[0], r[1]); extend(r[2], r[3]); });
+    if (drawFloor) { extend(box.x0, floorY); extend(box.x1, floorY); }
 
     const PAD = 12;
     box.x0 -= PAD; box.x1 += PAD; box.y0 -= PAD; box.y1 += PAD;
@@ -1709,8 +1980,15 @@ window.AI4M_DATA = {
 
     let body = '';
 
+    // props (chair, wall, step, table) drawn behind the figure
+    (pose.props || []).forEach(r => {
+      body += '<rect x="' + esc(Math.min(r[0], r[2])) + '" y="' + esc(Math.min(r[1], r[3])) +
+              '" width="' + esc(Math.abs(r[2] - r[0])) + '" height="' + esc(Math.abs(r[3] - r[1])) +
+              '" class="pf-prop"/>';
+    });
+
     // floor — drawn only across the figure, not the whole canvas
-    if (o.showFloor) {
+    if (drawFloor) {
       body += `<line x1="${esc(box.x0 + 4)}" y1="${floorY}" x2="${esc(box.x1 - 4)}" y2="${floorY}" class="pf-floor"/>`;
     }
 
@@ -1800,10 +2078,9 @@ window.AI4M_DATA = {
 <script>
 /* =============================================================================
    AI4Mobility — application logic
-   -----------------------------------------------------------------------------
-   Tabs: Exercises · Session · Add your own · What's real
-   No build step, no framework, no network calls, no browser storage.
-   State lives in memory for the duration of the visit.
+   Tabs: Programmes · Current session · Add a programme
+   No framework, no network requests, no browser storage. Session state is held
+   in memory for the duration of the visit.
    ============================================================================= */
 
 (function () {
@@ -1817,13 +2094,13 @@ window.AI4M_DATA = {
 
   const state = {
     tab: 'library',
+    filter: 'All',
     programme: null,
     stepIndex: 0,
     running: false,
     remaining: 0,
     ticker: null,
-    completed: {},          // programmeId -> Set of step numbers done this visit
-    custom: null,           // last split result from the builder
+    completed: {},
     speak: false
   };
 
@@ -1836,61 +2113,82 @@ window.AI4M_DATA = {
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  function formatSeconds(s) {
+    s = Math.max(0, Math.round(s));
+    if (s < 60) return s + 's';
+    const m = Math.floor(s / 60), r = s % 60;
+    return r ? m + 'm ' + r + 's' : m + 'm';
+  }
+
   /* ------------------------------------------------------------------- tabs */
 
   function showTab(name, opts) {
-    const focusHeading = !(opts && opts.silent);
     state.tab = name;
     $$('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
     $$('.panel').forEach(p => { p.hidden = p.id !== 'panel-' + name; });
-    if (focusHeading) {
+    if (!(opts && opts.silent)) {
       const h = $('#panel-' + name + ' h1, #panel-' + name + ' h2');
       if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
     }
-    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+    window.scrollTo(0, 0);
   }
 
   /* ---------------------------------------------------------------- library */
 
-  function isNHS(p) { return !!p.source_url && /(^|\.)nhs\.uk/.test(p.source_url); }
-
-  function difficultyDots(n) {
-    let out = '<span class="dots" aria-label="Difficulty ' + n + ' of 3">';
-    for (let i = 1; i <= 3; i++) out += '<span class="dot' + (i <= n ? ' on' : '') + '"></span>';
+  function levelBars(n) {
+    let out = '<span class="level" aria-label="Level ' + n + ' of 3">';
+    for (let i = 1; i <= 3; i++) out += '<i class="' + (i <= n ? 'on' : '') + '"></i>';
     return out + '</span>';
+  }
+
+  function families() {
+    const set = [];
+    DATA.programmes.forEach(p => { if (set.indexOf(p.family) === -1) set.push(p.family); });
+    return ['All'].concat(set.sort());
+  }
+
+  function renderFilters() {
+    const host = $('#filters');
+    host.innerHTML = '<span class="lbl">Area</span>' + families().map(f =>
+      `<button class="chip" type="button" data-fam="${esc(f)}" aria-pressed="${f === state.filter}">${esc(f)}</button>`
+    ).join('');
+    $$('[data-fam]', host).forEach(b => b.addEventListener('click', () => {
+      state.filter = b.dataset.fam;
+      renderFilters();
+      renderLibrary();
+    }));
   }
 
   function renderLibrary() {
     const host = $('#library-grid');
-    host.innerHTML = DATA.programmes.map(p => {
+    const list = DATA.programmes.filter(p => state.filter === 'All' || p.family === state.filter);
+
+    host.innerHTML = list.map(p => {
       const done = state.completed[p.id] ? state.completed[p.id].size : 0;
       const total = p.steps.length;
+      const preview = Poses.render(p.steps[0].pose, { animate: false, title: '' });
       return `
       <button class="ecard" data-id="${esc(p.id)}" type="button">
-        <div class="ecard-top">
-          <div class="ecard-icon c-${esc(p.colour)}" aria-hidden="true">${p.icon}</div>
-          <div>
-            <h3>${esc(p.title)}</h3>
-            <div class="ecard-fam">${esc(p.family)}</div>
-          </div>
+        <div class="ecard-fig" aria-hidden="true">${preview}</div>
+        <div>
+          <h3>${esc(p.title)}</h3>
+          <div class="ecard-sub">${esc(p.subtitle)}</div>
         </div>
-        <p class="ecard-goal">${esc(p.why_kids_like_it)}</p>
+        <p class="ecard-goal">${esc(p.goal)}</p>
         <div class="ecard-meta">
           <span class="pill">${total} step${total === 1 ? '' : 's'}</span>
           <span class="pill">${p.duration_min} min</span>
-          ${p.source_url ? `<span class="pill src">${isNHS(p) ? 'NHS source' : 'Cited source'}</span>` : ''}
-          ${p.optional ? '<span class="pill opt">Extra</span>' : ''}
+          <span class="pill">${esc(p.position)}</span>
+          ${p.source_url ? '<span class="pill src">Referenced</span>' : ''}
         </div>
         <div class="row spread">
-          ${difficultyDots(p.difficulty)}
-          <span class="small muted">${done}/${total} done</span>
+          ${levelBars(p.difficulty)}
+          <span class="small muted">${done ? done + ' of ' + total + ' complete' : ''}</span>
         </div>
       </button>`;
     }).join('');
 
-    $$('.ecard', host).forEach(btn => {
-      btn.addEventListener('click', () => openProgramme(btn.dataset.id));
-    });
+    $$('.ecard', host).forEach(b => b.addEventListener('click', () => openProgramme(b.dataset.id)));
   }
 
   /* ---------------------------------------------------------------- session */
@@ -1900,6 +2198,7 @@ window.AI4M_DATA = {
     if (!p) return;
     state.programme = p;
     state.stepIndex = 0;
+    state.remaining = 0;
     stopTimer();
     if (!state.completed[id]) state.completed[id] = new Set();
     renderSession();
@@ -1907,8 +2206,7 @@ window.AI4M_DATA = {
   }
 
   function currentStep() {
-    if (!state.programme) return null;
-    return state.programme.steps[state.stepIndex] || null;
+    return state.programme ? (state.programme.steps[state.stepIndex] || null) : null;
   }
 
   function renderSession() {
@@ -1917,9 +2215,8 @@ window.AI4M_DATA = {
 
     if (!p) {
       host.innerHTML = `<div class="card empty">
-        <h2>No exercise chosen yet</h2>
-        <p>Pick one from the Exercises tab to get started.</p>
-        <button class="btn btn-primary" type="button" data-goto="library">See the exercises</button>
+        <p>No programme selected.</p>
+        <p><button class="btn btn-primary" type="button" data-goto>Browse the programmes</button></p>
       </div>`;
       $('[data-goto]', host).addEventListener('click', () => showTab('library'));
       return;
@@ -1929,62 +2226,55 @@ window.AI4M_DATA = {
     const total = p.steps.length;
     const doneSet = state.completed[p.id];
     const pct = Math.round((doneSet.size / total) * 100);
-    const stars = Math.min(3, Math.floor((doneSet.size / total) * 3 + 0.0001));
 
     host.innerHTML = `
-      <div class="row spread mb">
-        <button class="btn btn-ghost btn-sm" type="button" id="back-lib">← All exercises</button>
-        <div class="stars" role="img" aria-label="${stars} of 3 stars earned">
-          ${[1,2,3].map(i => `<span class="star${i <= stars ? ' on' : ''}">⭐</span>`).join('')}
-        </div>
+      <div class="row spread" style="margin-bottom:18px">
+        <button class="btn btn-sm" type="button" id="back-lib">All programmes</button>
+        <span class="small muted">${esc(p.title)} · ${doneSet.size} of ${total} complete</span>
       </div>
 
       <div class="session">
         <div>
           <div class="card stagewrap">
-            <div class="row spread" style="margin-bottom:6px">
-              <span class="stepline">Step ${step.n} of ${total}</span>
-              <span class="stepline">${esc(p.title)}</span>
+            <div class="stagehead">
+              <span>Step ${step.n} of ${total}</span>
+              <span>${esc(p.family)}</span>
             </div>
-            <div id="stage">${Poses.render(step.pose, { title: step.text })}</div>
-            <p class="steptext">${esc(step.text)}</p>
-            ${step.cue ? `<p class="stepcue">${esc(step.cue)}</p>` : ''}
 
-            <div id="timerbox">${renderTimerBox(step)}</div>
+            ${Poses.render(step.pose, { title: step.title || step.text })}
+
+            <p class="steptitle">${esc(step.title || ('Step ' + step.n))}</p>
+            <p class="steptext">${esc(step.text)}</p>
+
+            <div class="dose${state.running ? ' running' : ''}" id="dosebox">${renderDose(step)}</div>
 
             <div class="controls">
-              <button class="btn" type="button" id="prev" ${state.stepIndex === 0 ? 'disabled' : ''}>← Back</button>
-              ${(step.hold_s > 0)
-                ? `<button class="btn btn-go" type="button" id="play">${state.running ? '⏸ Pause' : '▶ Start hold'}</button>`
+              <button class="btn" type="button" id="prev" ${state.stepIndex === 0 ? 'disabled' : ''}>Previous</button>
+              ${step.hold_s > 0
+                ? `<button class="btn" type="button" id="play">${state.running ? 'Pause' : (state.remaining ? 'Resume' : 'Start timer')}</button>`
                 : ''}
               <button class="btn btn-primary" type="button" id="next">
-                ${state.stepIndex === total - 1 ? 'Finish ✓' : 'Done — next →'}
+                ${state.stepIndex === total - 1 ? 'Complete programme' : 'Next step'}
               </button>
-              <button class="chip" type="button" id="say" aria-pressed="${state.speak}">🔊 Read aloud</button>
+              <button class="chip" type="button" id="say" aria-pressed="${state.speak}">Read aloud</button>
             </div>
           </div>
 
           <div class="card">
-            <h2>📋 The original description</h2>
+            <h2>Original description</h2>
             <div class="orig">
-              <h3>✏️ Exactly as it was written</h3>
               <p>${esc(p.original_description)}</p>
               <div class="src">
                 ${p.source_url
                   ? `Source: <a href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(p.source_name)}</a>`
                   : `Source: ${esc(p.source_name)}`}
-                <br>${esc(p.evidence_label)}
               </div>
             </div>
-            <p class="small muted mt">
-              The steps above were produced from this description by the step-splitting
-              engine and then checked by hand. Both are shown so you can compare them.
-            </p>
           </div>
 
           <div class="card">
-            <div class="safety">
-              <strong>⚠️ Staying safe</strong>
+            <div class="notice alert">
+              <strong>Safety</strong>
               ${esc(p.safety)}
             </div>
           </div>
@@ -1992,29 +2282,28 @@ window.AI4M_DATA = {
 
         <div>
           <div class="card">
-            <h2>🎯 Your progress</h2>
+            <h2>Programme steps</h2>
             <div class="bar"><i style="width:${pct}%"></i></div>
-            <p class="small muted">${doneSet.size} of ${total} steps done this visit.</p>
             <ol class="rail">
               ${p.steps.map((s, i) => `
                 <li class="${doneSet.has(s.n) ? 'done' : ''}${i === state.stepIndex ? ' now' : ''}">
-                  <span class="rail-n">${doneSet.has(s.n) ? '✓' : s.n}</span>
+                  <span class="rail-n">${doneSet.has(s.n) ? '&check;' : s.n}</span>
                   <span>
-                    <span class="rail-t">${esc(s.text.length > 92 ? s.text.slice(0, 92) + '…' : s.text)}</span>
-                    ${(s.hold_s || s.reps) ? `<span class="rail-p">${s.reps ? s.reps + '×' : ''}${(s.reps && s.hold_s) ? ' · ' : ''}${s.hold_s ? formatSeconds(s.hold_s) + ' hold' : ''}</span>` : ''}
+                    <span class="rail-t">${esc(s.title || s.text.slice(0, 58))}</span>
+                    <span class="rail-p">${doseLine(s) || '&nbsp;'}</span>
                   </span>
                 </li>`).join('')}
             </ol>
             <div class="row mt">
-              <button class="btn btn-ghost btn-sm" type="button" id="reset">Start over</button>
+              <button class="btn btn-sm" type="button" id="reset">Reset progress</button>
             </div>
           </div>
 
           <div class="card">
-            <h2>ℹ️ About this one</h2>
+            <h2>About this programme</h2>
             <p class="small">${esc(p.goal)}</p>
-            <p class="small muted">
-              ${esc(p.also_called ? 'Also called: ' + p.also_called : '')}
+            <p class="small muted" style="margin-top:10px">
+              Position: ${esc(p.position)} &middot; Approx. ${p.duration_min} minutes
             </p>
           </div>
         </div>
@@ -2025,32 +2314,35 @@ window.AI4M_DATA = {
     $('#next').addEventListener('click', nextStep);
     $('#reset').addEventListener('click', () => {
       state.completed[p.id] = new Set();
-      state.stepIndex = 0; stopTimer(); renderSession();
+      state.stepIndex = 0; state.remaining = 0; stopTimer(); renderSession();
     });
     const play = $('#play');
     if (play) play.addEventListener('click', toggleTimer);
     $('#say').addEventListener('click', toggleSpeech);
 
-    if (state.speak) speak(step.text + (step.cue ? '. ' + step.cue : ''));
+    if (state.speak) speak((step.title ? step.title + '. ' : '') + step.text);
   }
 
-  function renderTimerBox(step) {
-    if (step.hold_s > 0) {
-      const shown = state.running || state.remaining ? state.remaining : step.hold_s;
-      return `<div class="timer${step.hold_s > 300 ? ' small' : ''}" aria-live="polite">${formatSeconds(shown)}</div>
-              <div class="timer-label">${state.running ? 'holding' : 'hold for'}${step.reps ? ' · ' + step.reps + ' times' : ''}</div>`;
-    }
+  function doseLine(s) {
+    const bits = [];
+    if (s.reps) bits.push(s.reps + ' repetitions');
+    if (s.hold_s) bits.push(formatSeconds(s.hold_s) + ' hold');
+    return bits.join(' · ');
+  }
+
+  function renderDose(step) {
+    const cells = [];
     if (step.reps) {
-      return `<div class="timer">${step.reps}×</div><div class="timer-label">repeat this many times</div>`;
+      cells.push(`<div><b>${step.reps}</b><span>Repetitions</span></div>`);
     }
-    return `<div class="timer-label">take your time</div>`;
-  }
-
-  function formatSeconds(s) {
-    s = Math.max(0, Math.round(s));
-    if (s < 60) return s + 's';
-    const m = Math.floor(s / 60), r = s % 60;
-    return r ? `${m}m ${r}s` : `${m}m`;
+    if (step.hold_s > 0) {
+      const shown = (state.running || state.remaining) ? state.remaining : step.hold_s;
+      cells.push(`<div aria-live="polite"><b>${formatSeconds(shown)}</b><span>${state.running ? 'Remaining' : 'Hold'}</span></div>`);
+    }
+    if (!cells.length) {
+      cells.push('<div><b>&mdash;</b><span>No set count</span></div>');
+    }
+    return cells.join('');
   }
 
   /* ------------------------------------------------------------------ timer */
@@ -2058,13 +2350,14 @@ window.AI4M_DATA = {
   function toggleTimer() {
     const step = currentStep();
     if (!step || !step.hold_s) return;
-    if (state.running) { stopTimer(); }
-    else {
+    if (state.running) {
+      stopTimer();
+    } else {
       if (!state.remaining) state.remaining = step.hold_s;
       state.running = true;
       state.ticker = setInterval(tick, 1000);
     }
-    refreshTimer();
+    refreshDose();
   }
 
   function stopTimer() {
@@ -2075,28 +2368,30 @@ window.AI4M_DATA = {
   function tick() {
     state.remaining -= 1;
     if (state.remaining <= 0) {
-      stopTimer();
       state.remaining = 0;
-      refreshTimer();
-      if (state.speak) speak('Well done.');
+      stopTimer();
+      refreshDose();
+      if (state.speak) speak('Hold complete.');
       return;
     }
-    refreshTimer();
+    refreshDose();
   }
 
-  function refreshTimer() {
+  function refreshDose() {
     const step = currentStep();
-    const box = $('#timerbox');
-    if (box && step) box.innerHTML = renderTimerBox(step);
+    const box = $('#dosebox');
+    if (box && step) {
+      box.innerHTML = renderDose(step);
+      box.className = 'dose' + (state.running ? ' running' : '');
+    }
     const play = $('#play');
-    if (play) play.textContent = state.running ? '⏸ Pause' : (state.remaining ? '▶ Resume' : '▶ Start hold');
+    if (play) play.textContent = state.running ? 'Pause' : (state.remaining ? 'Resume' : 'Start timer');
   }
 
   /* -------------------------------------------------------------- stepping */
 
   function nextStep() {
-    const p = state.programme;
-    const step = currentStep();
+    const p = state.programme, step = currentStep();
     if (!p || !step) return;
     state.completed[p.id].add(step.n);
     stopTimer();
@@ -2107,7 +2402,8 @@ window.AI4M_DATA = {
 
   function prevStep() {
     if (state.stepIndex > 0) state.stepIndex -= 1;
-    stopTimer(); state.remaining = 0;
+    stopTimer();
+    state.remaining = 0;
     renderSession();
   }
 
@@ -2119,7 +2415,7 @@ window.AI4M_DATA = {
     if (b) b.setAttribute('aria-pressed', String(state.speak));
     if (state.speak) {
       const s = currentStep();
-      if (s) speak(s.text + (s.cue ? '. ' + s.cue : ''));
+      if (s) speak((s.title ? s.title + '. ' : '') + s.text);
     } else if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -2130,126 +2426,54 @@ window.AI4M_DATA = {
     try {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.92; u.pitch = 1.05; u.lang = 'en-GB';
+      u.rate = 0.94; u.lang = 'en-GB';
       window.speechSynthesis.speak(u);
-    } catch (e) { /* speech is optional; never block the interface */ }
+    } catch (e) { /* speech is optional and must never block the interface */ }
   }
 
   /* --------------------------------------------------------------- builder */
 
   function renderBuilderResult(res) {
     const host = $('#builder-out');
+
     if (!res) {
-      host.innerHTML = `<div class="empty">
-        <p style="font-size:2.4rem;margin:0">✏️</p>
-        <p>Paste or type an exercise description on the left, then press
-        <strong>Split it into steps</strong>.</p></div>`;
+      host.innerHTML = '<div class="empty">Enter a description on the left, then select ' +
+                       '<strong>Separate into steps</strong>.</div>';
       return;
     }
+
     if (!res.ok) {
       const why = res.reason === 'too_short'
-        ? 'That is too short to split. Try writing at least a full sentence.'
+        ? 'The description is too short to separate. Please enter at least a full sentence.'
         : res.reason === 'empty'
-          ? 'Nothing to split yet — the box is empty.'
-          : 'No steps could be found in that text.';
-      host.innerHTML = `<div class="warnbox"><strong>Could not split that</strong><br>${esc(why)}</div>`;
+          ? 'Nothing has been entered yet.'
+          : 'No steps could be identified in that description.';
+      host.innerHTML = `<div class="notice"><strong>Unable to separate</strong>${esc(why)}</div>`;
       return;
     }
 
-    const c = res.confidence;
-    const cls = c >= 0.7 ? 'hi' : c >= 0.5 ? 'mid' : 'lo';
-    const word = c >= 0.7 ? 'Good confidence' : c >= 0.5 ? 'Moderate confidence' : 'Low confidence';
-
     host.innerHTML = `
-      <div class="row spread mb">
-        <h3 style="margin:0">${res.steps.length} step${res.steps.length === 1 ? '' : 's'} found</h3>
-        <span class="conf ${cls}">${word} · ${Math.round(c * 100)}%</span>
-      </div>
-
+      <h2>${res.steps.length} step${res.steps.length === 1 ? '' : 's'}</h2>
       <ol class="rail">
         ${res.steps.map(s => `
           <li>
             <span class="rail-n">${s.n}</span>
             <span>
               <span class="rail-t">${esc(s.text)}</span>
-              <span class="rail-p">
-                ${esc(s.kind)}${s.reps ? ' · ' + s.reps + '×' : ''}${s.hold_s ? ' · ' + formatSeconds(s.hold_s) + ' hold' : ''}
-                · ${Math.round(s.confidence * 100)}% sure
-              </span>
+              ${doseLine(s) ? `<span class="rail-p">${doseLine(s)}</span>` : ''}
             </span>
           </li>`).join('')}
       </ol>
 
-      ${res.safety.length ? `<div class="safety mt"><strong>⚠️ Safety lines found (kept separate from the steps)</strong>
+      ${res.safety.length ? `<div class="notice alert mt"><strong>Safety notes identified</strong>
         ${res.safety.map(s => esc(s)).join('<br>')}</div>` : ''}
 
-      ${res.warnings && res.warnings.length ? `<div class="warnbox">
-        <strong>Worth checking</strong>
-        <ul>${res.warnings.map(w => '<li>' + esc(w) + '</li>').join('')}</ul>
-      </div>` : ''}
-
-      <div class="method">
-        Method used: <strong>${esc(res.method)}</strong>.
-        ${res.method === 'rule-based'
-          ? 'Sentence segmentation, then connective splitting, then classification — all deterministic, no language model involved.'
-          : res.method.indexOf('explicit') === 0
-            ? 'Your text was already numbered or bulleted, so that structure was kept exactly as written rather than re-split.'
-            : ''}
-      </div>`;
+      ${res.warnings && res.warnings.length ? `<div class="notice mt"><strong>Please review</strong>
+        ${res.warnings.map(w => esc(w)).join('<br>')}</div>` : ''}`;
   }
 
   function runSplit() {
-    const text = $('#builder-in').value;
-    Splitter.splitExercise(text).then(res => {
-      state.custom = res;
-      renderBuilderResult(res);
-      $('#builder-out').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    });
-  }
-
-  /* ------------------------------------------------------------- honesty */
-
-  const HONESTY = [
-    ['Exercise library with the five required programmes', 'built',
-     'Child\'s Pose, Cat–Cow, Thread the Needle, the NHS lower limb guide and the paediatric core and hip stability set are all present, with a sixth optional extra.'],
-    ['Original description shown beside the generated steps', 'built',
-     'Added directly in response to supervisor feedback. Every programme stores its source text verbatim and displays it under the steps.'],
-    ['Manual description entry', 'built',
-     'The "Add your own" tab accepts any free-text description and runs it through the same splitter.'],
-    ['Rule-based step splitting', 'built',
-     'Sentence segmentation, connective splitting, classification, and extraction of hold times and repetition counts. 24 unit tests pass.'],
-    ['LLM-based step splitting', 'not',
-     'NOT implemented. An adapter interface exists in splitter.js and returns null. Doing this properly needs a server-side API key, a proxy endpoint, schema validation of the response, and a clinical-safety review — none of which are done.'],
-    ['Stick-figure pose pictures', 'part',
-     'All 27 poses are drawn, but from hand-authored joint coordinates, not from a pose estimation model. They use the same skeleton connection list as the notebook figures.'],
-    ['Live camera pose feedback', 'not',
-     'NOT implemented in this interface. The notebook contains MediaPipe landmark extraction on recorded data. Real-time feedback on a child would need camera consent handling, on-device processing and an ethics amendment.'],
-    ['Read-aloud of the steps', 'part',
-     'Uses the browser\'s built-in speech synthesis where available. Voice quality and language coverage depend entirely on the device — nothing is bundled with the platform.'],
-    ['Progress and stars', 'part',
-     'Progress is tracked for the current visit only. Nothing is saved between visits because no storage or account system was built.'],
-    ['Accessibility controls', 'built',
-     'Large text, high contrast and calm (reduced motion) modes, keyboard navigation, visible focus, skip link and ARIA labelling throughout.'],
-    ['Accounts, saved history, therapist dashboard', 'not',
-     'NOT implemented. There is no backend, no database and no login. Everything is client-side.'],
-    ['Clinical validation with children', 'not',
-     'NOT done. No child has used this. The exercise content is adapted from published NHS sources but the platform itself has had no clinical or user evaluation.']
-  ];
-
-  function renderHonesty() {
-    const counts = { built: 0, part: 0, not: 0 };
-    HONESTY.forEach(r => counts[r[1]]++);
-    $('#honesty-counts').innerHTML = `
-      <div class="hstat"><b>${counts.built}</b><span>Built</span></div>
-      <div class="hstat"><b>${counts.part}</b><span>Partly</span></div>
-      <div class="hstat"><b>${counts.not}</b><span>Not built</span></div>`;
-
-    $('#honesty-body').innerHTML = HONESTY.map(([name, tag, detail]) => `
-      <tr>
-        <td><strong>${esc(name)}</strong></td>
-        <td><span class="tag ${tag}">${tag === 'built' ? 'Built' : tag === 'part' ? 'Partly' : 'Not built'}</span></td>
-        <td>${esc(detail)}</td>
-      </tr>`).join('');
+    Splitter.splitExercise($('#builder-in').value).then(renderBuilderResult);
   }
 
   /* ------------------------------------------------------------------ init */
@@ -2266,20 +2490,11 @@ window.AI4M_DATA = {
     });
   }
 
-  function initStats() {
-    const totalSteps = DATA.programmes.reduce((a, p) => a + p.steps.length, 0);
-    const withSource = DATA.programmes.filter(isNHS).length;
-    $('#stat-progs').textContent = DATA.programmes.length;
-    $('#stat-steps').textContent = totalSteps;
-    $('#stat-src').textContent = withSource;
-  }
-
   function init() {
     $$('.tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
     $('#split-btn').addEventListener('click', runSplit);
     $('#clear-btn').addEventListener('click', () => {
       $('#builder-in').value = '';
-      state.custom = null;
       renderBuilderResult(null);
       $('#builder-in').focus();
     });
@@ -2289,11 +2504,10 @@ window.AI4M_DATA = {
     }));
 
     initToggles();
-    initStats();
+    renderFilters();
     renderLibrary();
     renderSession();
     renderBuilderResult(null);
-    renderHonesty();
     showTab('library', { silent: true });
   }
 

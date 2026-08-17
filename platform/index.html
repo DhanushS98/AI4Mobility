@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI4Mobility — exercise helper for children and parents</title>
-<meta name="description" content="A child-friendly exercise helper: NHS-sourced paediatric physiotherapy and stretch programmes, split into clear steps with pictures.">
+<title>AI4Mobility — guided exercise programmes</title>
+<meta name="description" content="Guided paediatric physiotherapy and mobility programmes, presented one step at a time with illustrations, timing and the original source description.">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -14,26 +14,22 @@
 <header class="topbar">
   <div class="wrap">
     <a class="brand" href="#main">
-      <span class="brand-mark" aria-hidden="true">🤸</span>
-      <span>
-        <span class="brand-name">AI4Mobility</span><br>
-        <span class="brand-sub">Exercise helper for children and parents</span>
-      </span>
+      <span class="brand-name">AI4Mobility</span>
+      <span class="brand-sub">Guided exercise programmes</span>
     </a>
     <div class="topbar-tools">
-      <button class="chip" id="toggle-text" type="button" aria-pressed="false">🔠 Bigger text</button>
-      <button class="chip" id="toggle-contrast" type="button" aria-pressed="false">◐ High contrast</button>
-      <button class="chip" id="toggle-calm" type="button" aria-pressed="false">🌙 Calm mode</button>
+      <button class="chip" id="toggle-text" type="button" aria-pressed="false">Larger text</button>
+      <button class="chip" id="toggle-contrast" type="button" aria-pressed="false">High contrast</button>
+      <button class="chip" id="toggle-calm" type="button" aria-pressed="false">Reduce motion</button>
     </div>
   </div>
 </header>
 
 <div class="wrap">
   <nav class="tabs" role="tablist" aria-label="Sections">
-    <button class="tab" role="tab" data-tab="library"  aria-selected="true"  type="button">🏃 Exercises</button>
-    <button class="tab" role="tab" data-tab="session"  aria-selected="false" type="button">▶️ Do it now</button>
-    <button class="tab" role="tab" data-tab="builder"  aria-selected="false" type="button">✏️ Add your own</button>
-    <button class="tab" role="tab" data-tab="honesty"  aria-selected="false" type="button">🔍 What's real</button>
+    <button class="tab" role="tab" data-tab="library" aria-selected="true"  type="button">Programmes</button>
+    <button class="tab" role="tab" data-tab="session" aria-selected="false" type="button">Current session</button>
+    <button class="tab" role="tab" data-tab="builder" aria-selected="false" type="button">Add a programme</button>
   </nav>
 </div>
 
@@ -41,33 +37,19 @@
 
   <!-- ============================================================ LIBRARY -->
   <section class="panel" id="panel-library" role="tabpanel">
-    <div class="hero">
-      <h1>Let's move! 🎉</h1>
+    <div class="pagehead">
+      <div class="eyebrow">Exercise library</div>
+      <h1>Choose a programme</h1>
       <p>
-        Pick an exercise below. Each one shows you a picture, one step at a time,
-        and the exact words it came from so a grown-up can check it. Go at
-        whatever speed feels right — there is no rush and no score to beat.
+        Each programme is presented one step at a time, with an illustration,
+        the recommended repetitions and hold time, and the original description
+        it was taken from so it can be checked against the source.
       </p>
-      <div class="hero-stats">
-        <div class="hstat"><b id="stat-progs">–</b><span>Programmes</span></div>
-        <div class="hstat"><b id="stat-steps">–</b><span>Steps in total</span></div>
-        <div class="hstat"><b id="stat-src">–</b><span>NHS-sourced</span></div>
-      </div>
     </div>
+
+    <div class="filters" id="filters" role="group" aria-label="Filter by area"></div>
 
     <div class="grid" id="library-grid"></div>
-
-    <div class="card mt">
-      <h2>👨‍👩‍👧 For grown-ups</h2>
-      <p class="small">
-        The exercise content here is adapted from published NHS paediatric
-        physiotherapy resources, each linked on its own page. This is a student
-        project and it is <strong>not</strong> a medical device and
-        <strong>not</strong> a substitute for your own physiotherapist's advice.
-        If your child has been given a specific programme, follow that one.
-        Stop any exercise that causes pain and seek advice.
-      </p>
-    </div>
   </section>
 
   <!-- ============================================================ SESSION -->
@@ -75,13 +57,14 @@
 
   <!-- ============================================================ BUILDER -->
   <section class="panel" id="panel-builder" role="tabpanel" hidden>
-    <div class="hero">
-      <h1>Add your own exercise ✏️</h1>
+    <div class="pagehead">
+      <div class="eyebrow">Custom programme</div>
+      <h1>Add your own exercise description</h1>
       <p>
-        Type or paste any exercise description — from a physiotherapy leaflet, a
-        letter, or in your own words — and the splitter will turn it into
-        numbered steps. Your original text is never changed or thrown away, and
-        every step is shown with how confident the splitter is about it.
+        Enter a description from a physiotherapy leaflet, a clinic letter, or in
+        your own words. It will be separated into numbered steps, with any
+        repetitions, hold times and safety notes identified. The original text is
+        kept alongside so the two can be compared.
       </p>
     </div>
 
@@ -89,78 +72,27 @@
       <div class="card">
         <label class="fld" for="builder-in">Exercise description</label>
         <p class="hint">
-          Whole paragraphs are fine. If you already have numbered steps, they
-          will be kept exactly as you wrote them.
+          Full paragraphs are fine. Descriptions that are already numbered or
+          bulleted will keep the structure you entered.
         </p>
         <textarea id="builder-in" placeholder="For example: Lie on your back with your knees bent and feet flat. Squeeze your bottom and lift your hips until they line up with your knees. Hold for 5 seconds, then lower slowly. Repeat 10 times."></textarea>
         <div class="row mt">
-          <button class="btn btn-primary" id="split-btn" type="button">✂️ Split it into steps</button>
-          <button class="btn btn-ghost" id="clear-btn" type="button">Clear</button>
+          <button class="btn btn-primary" id="split-btn" type="button">Separate into steps</button>
+          <button class="btn" id="clear-btn" type="button">Clear</button>
         </div>
 
-        <p class="small muted mt"><strong>Try an example:</strong></p>
-        <div class="row">
-          <button class="btn btn-ghost btn-sm" type="button"
-            data-sample="Lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee. Repeat 10 times. Stop if pain becomes worse and seek advice from a healthcare professional.">NHS ankle flexion</button>
-          <button class="btn btn-ghost btn-sm" type="button"
+        <p class="small muted mt" style="margin-bottom:8px"><strong>Examples</strong></p>
+        <div class="samples">
+          <button class="btn btn-sm" type="button"
+            data-sample="Lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee. Repeat 10 times. Stop if pain becomes worse and seek advice from a healthcare professional.">Continuous prose</button>
+          <button class="btn btn-sm" type="button"
             data-sample="1. Kneel on the floor with your knees apart.&#10;2. Sit back onto your heels.&#10;3. Fold forward and rest your tummy between your thighs.&#10;4. Hold for 20 seconds and breathe slowly.">Already numbered</button>
-          <button class="btn btn-ghost btn-sm" type="button"
-            data-sample="Start on your hands and knees with your wrists under your shoulders. Breathe in and drop your tummy towards the floor, lifting your chest. Breathe out and round your back up towards the ceiling, tucking your chin. Repeat ten times, moving slowly.">Cat–Cow prose</button>
+          <button class="btn btn-sm" type="button"
+            data-sample="Lie on your back with legs bent and back flattened into the bed. Squeeze your bottom and roll your bottom and back off the floor. Hold for 5 seconds and then lower back down. Repeat 10 to 12 times. If you find the exercises cause you more pain please stop and seek advice from a healthcare professional.">With a safety note</button>
         </div>
       </div>
 
       <div class="card" id="builder-out" aria-live="polite"></div>
-    </div>
-
-    <div class="card mt">
-      <h2>❓ Is this an AI language model?</h2>
-      <p class="small">
-        <strong>No.</strong> The splitter is a rule-based linguistic engine: it
-        segments sentences, splits them on connecting words like
-        <em>“then”</em> only when both halves read as instructions, classifies
-        each fragment as an action, a position, a hold, a repetition count or a
-        safety note, and pulls out numbers like “hold for 5 seconds” and
-        “repeat 10 times”. It is fully deterministic, runs entirely in your
-        browser, and makes no network requests.
-      </p>
-      <p class="small">
-        A language model would handle messier, more conversational descriptions
-        better. The code has a defined adapter interface for one, but it is
-        <strong>not connected to any model</strong> — see the
-        <em>What's real</em> tab for exactly what that would require.
-      </p>
-    </div>
-  </section>
-
-  <!-- ============================================================ HONESTY -->
-  <section class="panel" id="panel-honesty" role="tabpanel" hidden>
-    <div class="hero">
-      <h1>What's actually built 🔍</h1>
-      <p>
-        Every feature below is labelled honestly: fully built, partly built, or
-        not built at all. Where something is not built, the reason and the next
-        step are stated. Nothing here is described as working when it is not.
-      </p>
-      <div class="hero-stats" id="honesty-counts"></div>
-    </div>
-
-    <div class="card">
-      <table class="htable">
-        <thead>
-          <tr><th style="width:28%">Feature</th><th style="width:12%">Status</th><th>What that means</th></tr>
-        </thead>
-        <tbody id="honesty-body"></tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>🔜 What we would do next</h2>
-      <ol class="small">
-        <li><strong>Connect a language model to the splitter.</strong> Needs a server-side proxy holding the API key, a schema-constrained prompt, validation of the returned JSON, and the rule-based splitter kept as the fallback. The safety question — a model inventing an instruction that was not in the source — is why the original description is already displayed beside the steps.</li>
-        <li><strong>Live pose feedback.</strong> Run landmark detection on-device, compare joint angles against the target pose for the current step, and give a simple “try lifting a bit higher” prompt. Requires camera consent handling and an ethics amendment before any child uses it.</li>
-        <li><strong>Save progress.</strong> A small backend with accounts so a child's history persists and a physiotherapist can see adherence between appointments.</li>
-        <li><strong>Evaluate with real families.</strong> Nothing here has been tested with a child or a clinician. That is the largest gap in the whole project.</li>
-      </ol>
     </div>
   </section>
 
@@ -169,18 +101,24 @@
 <footer class="foot">
   <div class="wrap">
     <p>
-      <strong>AI4Mobility</strong> — A60, MSc AI Research and Development Project (55-708252),
-      Sheffield Hallam University. Team Deepminds.
+      <strong>AI4Mobility</strong> — Project A60, MSc AI Research and Development
+      Project (55-708252), Sheffield Hallam University.
     </p>
     <p>
-      Exercise content adapted from
-      <a href="https://library.sheffieldchildrens.nhs.uk/general-lower-limb-exercises/" target="_blank" rel="noopener">Sheffield Children's NHS Foundation Trust — General lower limb exercises</a>,
+      Exercise content adapted with attribution from
+      <a href="https://library.sheffieldchildrens.nhs.uk/general-lower-limb-exercises/" target="_blank" rel="noopener">General lower limb exercises</a>,
       <a href="https://library.sheffieldchildrens.nhs.uk/core-and-hip-stability-exercises/" target="_blank" rel="noopener">Core and hip stability exercises</a>,
-      <a href="https://library.sheffieldchildrens.nhs.uk/calf-control-exercises/" target="_blank" rel="noopener">Calf control exercises</a>
-      and <a href="https://www.yogabasics.com/asana/threading-the-needle/" target="_blank" rel="noopener">Yoga Basics — Threading the Needle</a>.
+      <a href="https://library.sheffieldchildrens.nhs.uk/glute-strengthening/" target="_blank" rel="noopener">Glute strengthening</a>,
+      <a href="https://library.sheffieldchildrens.nhs.uk/calf-control-exercises/" target="_blank" rel="noopener">Calf control exercises</a> and
+      <a href="https://library.sheffieldchildrens.nhs.uk/wrist-exercises/" target="_blank" rel="noopener">Wrist exercises</a>
+      (Sheffield Children's NHS Foundation Trust), and
+      <a href="https://www.yogabasics.com/asana/threading-the-needle/" target="_blank" rel="noopener">Yoga Basics — Threading the Needle</a>.
     </p>
     <p>
-      Student project. Not a medical device. Not a substitute for professional advice.
+      This is a student project. It is not a medical device and is not a
+      substitute for advice from a qualified physiotherapist. Where a child has
+      been given a specific programme by a clinician, that programme should be
+      followed. Stop any exercise that causes pain and seek advice.
     </p>
   </div>
 </footer>

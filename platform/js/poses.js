@@ -27,7 +27,8 @@
     ['sho', 'elb'], ['elb', 'wri'],
     ['sho', 'elb2'], ['elb2', 'wri2'],
     ['hip', 'kne'], ['kne', 'ank'], ['ank', 'toe'],
-    ['hip', 'kne2'], ['kne2', 'ank2'], ['ank2', 'toe2']
+    ['hip', 'kne2'], ['kne2', 'ank2'], ['ank2', 'toe2'],
+    ['wri', 'hand'], ['wri2', 'hand2']
   ];
 
   /* ------------------------------------------------------------- pose bank */
@@ -224,7 +225,7 @@
            kne: [150, 100], ank: [150, 128], toe: [164, 131],
            kne2: [156, 100], ank2: [156, 128], toe2: [170, 131] },
       spineCtrl: [98, 100],
-      arrows: [[122, 108, 122, 90]]
+      arrows: [[104, 122, 104, 101]]
     },
     dead_bug: {
       label: 'Dead Bug — opposite arm and leg',
@@ -253,6 +254,179 @@
            kne: [148, 116], ank: [148, 86], toe: [162, 82],
            kne2: [154, 122], ank2: [182, 122], toe2: [192, 128] },
       arrows: [[158, 104, 158, 80]]
+    },
+    bridge_leg_lift: {
+      label: 'Bridge with one leg straightened',
+      floorY: 132,
+      j: { head: [54, 120], neck: [66, 120], sho: [78, 118], hip: [122, 92],
+           elb: [86, 126], wri: [104, 129],
+           kne: [150, 100], ank: [150, 128], toe: [164, 131],
+           kne2: [162, 88], ank2: [188, 82], toe2: [198, 86] },
+      spineCtrl: [98, 100],
+      arrows: [[104, 122, 104, 101], [166, 98, 190, 88]]
+    },
+    thigh_lift: {
+      label: 'Thigh lifted from lying on the front',
+      floorY: 128,
+      j: { head: [56, 116], neck: [68, 116], sho: [78, 116], hip: [120, 116],
+           elb: [58, 106], wri: [36, 104],
+           kne: [150, 104], ank: [150, 78], toe: [164, 74],
+           kne2: [154, 122], ank2: [182, 122], toe2: [192, 128] },
+      arrows: [[136, 118, 146, 102]]
+    },
+    step_up: {
+      label: 'Stepping up onto a step',
+      floorY: 134,
+      j: { head: [98, 24], neck: [98, 36], sho: [98, 44], hip: [100, 82],
+           elb: [88, 64], wri: [86, 86], elb2: [108, 64], wri2: [110, 86],
+           kne: [120, 96], ank: [124, 112], toe: [136, 114],
+           kne2: [96, 106], ank2: [94, 128], toe2: [106, 132] },
+      arrows: [[112, 104, 124, 92]],
+      props: [[112, 114, 152, 134]]
+    },
+    chair_squat: {
+      label: 'Lowering towards a chair',
+      floorY: 134,
+      j: { head: [96, 40], neck: [98, 52], sho: [100, 60], hip: [112, 94],
+           elb: [86, 70], wri: [72, 78], elb2: [104, 70], wri2: [90, 80],
+           kne: [96, 108], ank: [98, 130], toe: [110, 133],
+           kne2: [102, 108], ank2: [104, 130], toe2: [116, 133] },
+      arrows: [[126, 86, 126, 104]],
+      props: [[112, 100, 152, 134]]
+    },
+    soleus_raise: {
+      label: 'Heel raise with the knee bent',
+      floorY: 134,
+      j: { head: [104, 26], neck: [104, 38], sho: [104, 46], hip: [102, 84],
+           elb: [116, 60], wri: [130, 62], elb2: [94, 64], wri2: [92, 86],
+           kne: [112, 106], ank: [104, 122], toe: [118, 133],
+           kne2: [118, 100], ank2: [116, 116], toe2: [128, 120] },
+      arrows: [[98, 128, 98, 112]],
+      props: [[136, 20, 144, 134]]
+    },
+    tandem_stand: {
+      label: 'Heel-to-toe standing',
+      floorY: 134,
+      j: { head: [110, 26], neck: [110, 38], sho: [110, 46], hip: [110, 84],
+           elb: [96, 64], wri: [86, 76], elb2: [124, 64], wri2: [134, 76],
+           kne: [104, 108], ank: [100, 130], toe: [112, 133],
+           kne2: [116, 108], ank2: [120, 130], toe2: [132, 133] }
+    },
+    heel_toe_walk: {
+      label: 'Walking heel to toe in a line',
+      floorY: 134,
+      j: { head: [102, 26], neck: [102, 38], sho: [102, 46], hip: [104, 84],
+           elb: [88, 62], wri: [74, 70], elb2: [120, 62], wri2: [134, 70],
+           kne: [94, 108], ank: [90, 130], toe: [102, 133],
+           kne2: [122, 104], ank2: [130, 126], toe2: [144, 130] },
+      arrows: [[112, 128, 136, 124]]
+    },
+    seated: {
+      label: 'Sitting tall in a chair',
+      floorY: 136,
+      j: { head: [96, 30], neck: [96, 42], sho: [96, 50], hip: [96, 86],
+           elb: [86, 68], wri: [84, 88], elb2: [106, 68], wri2: [108, 88],
+           kne: [128, 88], ank: [130, 116], toe: [142, 134],
+           kne2: [128, 94], ank2: [130, 122], toe2: [142, 135] },
+      props: [[92, 86, 132, 90], [88, 40, 96, 90], [126, 90, 132, 134]]
+    },
+    shoulder_roll: {
+      label: 'Rolling the shoulders',
+      floorY: 136,
+      j: { head: [96, 30], neck: [96, 42], sho: [96, 50], hip: [96, 86],
+           elb: [82, 62], wri: [80, 84], elb2: [110, 62], wri2: [112, 84],
+           kne: [128, 88], ank: [130, 116], toe: [142, 134],
+           kne2: [128, 94], ank2: [130, 122], toe2: [142, 135] },
+      arrows: [[80, 44, 96, 36]],
+      props: [[92, 86, 132, 90], [88, 40, 96, 90], [126, 90, 132, 134]]
+    },
+    seated_reach: {
+      label: 'Reaching both arms overhead',
+      floorY: 136,
+      j: { head: [96, 34], neck: [96, 46], sho: [96, 54], hip: [96, 88],
+           elb: [88, 28], wri: [84, 4], elb2: [106, 28], wri2: [110, 4],
+           kne: [128, 90], ank: [130, 118], toe: [142, 134],
+           kne2: [128, 96], ank2: [130, 124], toe2: [142, 135] },
+      arrows: [[118, 20, 120, 2]],
+      props: [[92, 88, 132, 92], [88, 44, 96, 92], [126, 92, 132, 134]]
+    },
+    neck_stretch: {
+      label: 'Gentle neck side stretch',
+      floorY: 136,
+      j: { head: [84, 32], neck: [96, 44], sho: [96, 52], hip: [96, 88],
+           elb: [86, 70], wri: [84, 90], elb2: [106, 70], wri2: [108, 90],
+           kne: [128, 90], ank: [130, 118], toe: [142, 134],
+           kne2: [128, 96], ank2: [130, 124], toe2: [142, 135] },
+      arrows: [[92, 24, 76, 28]],
+      props: [[92, 88, 132, 92], [88, 42, 96, 92], [126, 92, 132, 134]]
+    },
+    seated_twist: {
+      label: 'Turning the shoulders to look behind',
+      floorY: 136,
+      j: { head: [104, 32], neck: [98, 44], sho: [98, 52], hip: [96, 88],
+           elb: [112, 66], wri: [122, 82], elb2: [84, 64], wri2: [96, 76],
+           kne: [128, 90], ank: [130, 118], toe: [142, 134],
+           kne2: [128, 96], ank2: [130, 124], toe2: [142, 135] },
+      arrows: [[110, 24, 126, 30]],
+      props: [[92, 88, 132, 92], [88, 42, 96, 92], [126, 92, 132, 134]]
+    },
+    wrist_table: {
+      // close-up of the forearm only: a head and torso at this scale read as a
+      // person lying down rather than as a hand exercise
+      label: 'Forearm resting on a table, wrist bending up and down',
+      floorY: 0,
+      j: { sho: [26, 40], elb: [64, 76], wri: [132, 84], hand: [174, 56] },
+      arrows: [[156, 96, 172, 62]],
+      props: [[52, 90, 198, 98]]
+    },
+    wrist_side: {
+      label: 'Wrist moving from side to side',
+      floorY: 0,
+      j: { sho: [26, 40], elb: [64, 76], wri: [132, 84], hand: [178, 68] },
+      arrows: [[172, 46, 186, 92]],
+      props: [[52, 90, 198, 98]]
+    },
+    forearm_twist: {
+      label: 'Elbow at the side, turning the palm',
+      floorY: 134,
+      j: { head: [96, 26], neck: [96, 38], sho: [96, 46], hip: [96, 84],
+           elb: [92, 68], wri: [136, 66], elb2: [102, 68], wri2: [140, 74],
+           kne: [92, 106], ank: [92, 130], toe: [104, 133],
+           kne2: [100, 106], ank2: [100, 130], toe2: [112, 133] },
+      arrows: [[152, 56, 156, 82]]
+    },
+    palm_stretch: {
+      label: 'The other hand eases the wrist back',
+      floorY: 0,
+      j: { sho: [22, 54], elb: [64, 82], wri: [130, 78], hand: [156, 34],
+           elb2: [72, 126], wri2: [128, 106], hand2: [150, 66] },
+      arrows: [[172, 62, 178, 32]]
+    },
+    hand_back_stretch: {
+      label: 'The other hand eases the wrist down',
+      floorY: 0,
+      j: { sho: [22, 44], elb: [64, 72], wri: [130, 80], hand: [156, 124],
+           elb2: [72, 20], wri2: [128, 50], hand2: [150, 92] },
+      arrows: [[172, 96, 178, 126]]
+    },
+    prayer_stretch: {
+      label: 'Palms together in front of the chest',
+      floorY: 134,
+      j: { head: [96, 26], neck: [96, 38], sho: [96, 46], hip: [96, 84],
+           elb: [78, 62], wri: [110, 56], elb2: [114, 62], wri2: [110, 60],
+           kne: [92, 106], ank: [92, 130], toe: [104, 133],
+           kne2: [100, 106], ank2: [100, 130], toe2: [112, 133] },
+      arrows: [[124, 44, 124, 62]]
+    },
+    wall_push: {
+      label: 'Hands flat against a wall',
+      floorY: 134,
+      j: { head: [86, 34], neck: [88, 46], sho: [90, 54], hip: [82, 90],
+           elb: [116, 58], wri: [146, 62], elb2: [116, 66], wri2: [146, 70],
+           kne: [78, 108], ank: [76, 130], toe: [88, 133],
+           kne2: [86, 108], ank2: [84, 130], toe2: [96, 133] },
+      arrows: [[130, 88, 148, 88]],
+      props: [[150, 14, 156, 134]]
     },
     clam: {
       label: 'Side lying — knee opens like a clam',
@@ -318,7 +492,9 @@
     // ---- automatic framing -------------------------------------------------
     // Compute a tight bounding box over everything that will be drawn, so every
     // pose fills its frame consistently instead of floating in white space.
+    // floorY === 0 means this pose has no ground plane (a close-up view).
     const floorY = pose.floorY != null ? pose.floorY : FLOOR_Y;
+    const drawFloor = o.showFloor && floorY !== 0;
     const box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
     function extend(x, y, r) {
       r = r || 0;
@@ -329,7 +505,8 @@
     if (pose.spineCtrl) extend(pose.spineCtrl[0], pose.spineCtrl[1]);
     (pose.arrows || []).forEach(a => { extend(a[0], a[1]); extend(a[2], a[3]); });
     if (pose.pulse) extend(pose.pulse[0], pose.pulse[1], 16);
-    if (o.showFloor) extend(box.x0, floorY), extend(box.x1, floorY);
+    (pose.props || []).forEach(r => { extend(r[0], r[1]); extend(r[2], r[3]); });
+    if (drawFloor) { extend(box.x0, floorY); extend(box.x1, floorY); }
 
     const PAD = 12;
     box.x0 -= PAD; box.x1 += PAD; box.y0 -= PAD; box.y1 += PAD;
@@ -344,8 +521,15 @@
 
     let body = '';
 
+    // props (chair, wall, step, table) drawn behind the figure
+    (pose.props || []).forEach(r => {
+      body += '<rect x="' + esc(Math.min(r[0], r[2])) + '" y="' + esc(Math.min(r[1], r[3])) +
+              '" width="' + esc(Math.abs(r[2] - r[0])) + '" height="' + esc(Math.abs(r[3] - r[1])) +
+              '" class="pf-prop"/>';
+    });
+
     // floor — drawn only across the figure, not the whole canvas
-    if (o.showFloor) {
+    if (drawFloor) {
       body += `<line x1="${esc(box.x0 + 4)}" y1="${floorY}" x2="${esc(box.x1 - 4)}" y2="${floorY}" class="pf-floor"/>`;
     }
 
