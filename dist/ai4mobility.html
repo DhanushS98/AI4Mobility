@@ -1,0 +1,2307 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI4Mobility — exercise helper for children and parents</title>
+<meta name="description" content="A child-friendly exercise helper: NHS-sourced paediatric physiotherapy and stretch programmes, split into clear steps with pictures.">
+<style>
+/* =============================================================================
+   AI4Mobility — child-friendly interface
+   Design goals: large targets, calm colour, obvious focus, readable at 200%
+   zoom, and nothing that moves unless the child chooses it.
+   ============================================================================= */
+
+:root {
+  /* categorical accents */
+  --blue:    #2a78d6;
+  --orange:  #eb6834;
+  --aqua:    #1baf7a;
+  --yellow:  #eda100;
+  --magenta: #e87ba4;
+  --green:   #008300;
+
+  --blue-soft:    #e8f1fc;
+  --orange-soft:  #fdeee8;
+  --aqua-soft:    #e4f7f0;
+  --yellow-soft:  #fdf4e0;
+  --magenta-soft: #fdeef4;
+  --green-soft:   #e5f3e5;
+
+  --ink:      #1c2b3a;
+  --ink-soft: #4b6072;
+  --rule:     #c7d4dd;
+  --grid:     #e7edf1;
+  --paper:    #ffffff;
+  --page:     #f5f8fb;
+
+  --r-lg: 26px;
+  --r-md: 18px;
+  --r-sm: 12px;
+
+  --shadow: 0 2px 0 var(--grid), 0 8px 22px rgba(28, 43, 58, .07);
+  --shadow-lift: 0 4px 0 var(--grid), 0 14px 30px rgba(28, 43, 58, .12);
+
+  --fs-base: 17px;
+  --step-dur: .35s;
+}
+
+/* accessibility toggles set on <html> */
+html.big-text    { --fs-base: 21px; }
+html.high-contrast {
+  --ink: #000; --ink-soft: #1a1a1a; --page: #fff; --rule: #000; --grid: #767676;
+  --blue-soft:#fff; --orange-soft:#fff; --aqua-soft:#fff;
+  --yellow-soft:#fff; --magenta-soft:#fff; --green-soft:#fff;
+  --shadow: 0 0 0 2px #000; --shadow-lift: 0 0 0 3px #000;
+}
+html.calm-mode { --step-dur: 0s; }
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--page);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { line-height: 1.2; margin: 0 0 .4em; font-weight: 800; letter-spacing: -.01em; }
+h1 { font-size: 1.85rem; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.08rem; }
+p  { margin: 0 0 .8em; }
+
+a { color: var(--blue); }
+
+/* visible focus everywhere — required, not optional */
+:focus-visible {
+  outline: 4px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0;
+  background: var(--blue); color: #fff; padding: 12px 18px;
+  border-radius: 0 0 var(--r-sm) 0; z-index: 200; font-weight: 700;
+}
+.skip-link:focus { left: 0; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ------------------------------------------------------------------ header */
+
+.topbar {
+  background: var(--paper);
+  border-bottom: 2px solid var(--grid);
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar .wrap {
+  display: flex; align-items: center; gap: 16px;
+  min-height: 76px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+.brand-mark {
+  width: 46px; height: 46px; border-radius: 14px; flex: none;
+  background: linear-gradient(135deg, var(--blue), var(--aqua));
+  display: grid; place-items: center; color: #fff; font-size: 22px;
+}
+.brand-name { font-weight: 800; font-size: 1.15rem; letter-spacing: -.02em; }
+.brand-sub  { font-size: .74rem; color: var(--ink-soft); font-weight: 600; }
+
+.topbar-tools { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.chip {
+  border: 2px solid var(--rule); background: var(--paper); color: var(--ink);
+  border-radius: 999px; padding: 9px 15px; font: inherit; font-size: .84rem;
+  font-weight: 700; cursor: pointer; min-height: 44px;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.chip:hover { border-color: var(--blue); }
+.chip[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* -------------------------------------------------------------------- nav */
+
+.tabs { display: flex; gap: 10px; padding: 16px 0 0; flex-wrap: wrap; }
+.tab {
+  border: 2px solid transparent; background: transparent; color: var(--ink-soft);
+  font: inherit; font-weight: 800; padding: 11px 18px; border-radius: var(--r-md);
+  cursor: pointer; min-height: 48px;
+}
+.tab:hover { background: var(--paper); color: var(--ink); }
+.tab[aria-selected="true"] {
+  background: var(--paper); color: var(--ink);
+  border-color: var(--grid); box-shadow: var(--shadow);
+}
+
+.panel { padding: 26px 0 70px; }
+.panel[hidden] { display: none; }
+
+/* ------------------------------------------------------------------- hero */
+
+.hero {
+  background: var(--paper); border: 2px solid var(--grid);
+  border-radius: var(--r-lg); padding: 28px; box-shadow: var(--shadow);
+  margin-bottom: 26px;
+}
+.hero h1 { margin-bottom: .3em; }
+.hero p { color: var(--ink-soft); max-width: 62ch; margin-bottom: 0; }
+
+.hero-stats { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 20px; }
+.hstat { min-width: 96px; }
+.hstat b { display: block; font-size: 1.7rem; line-height: 1.1; }
+.hstat span { font-size: .78rem; color: var(--ink-soft); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+
+/* ------------------------------------------------------------------ cards */
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)); gap: 20px; }
+
+.ecard {
+  background: var(--paper); border: 2px solid var(--grid);
+  border-radius: var(--r-lg); padding: 20px; text-align: left;
+  cursor: pointer; font: inherit; color: inherit;
+  box-shadow: var(--shadow); transition: transform var(--step-dur), box-shadow var(--step-dur);
+  display: flex; flex-direction: column; gap: 12px; min-height: 250px;
+}
+.ecard:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); }
+.ecard:active { transform: translateY(-1px); }
+
+.ecard-top { display: flex; align-items: flex-start; gap: 13px; }
+.ecard-icon {
+  width: 58px; height: 58px; border-radius: 18px; flex: none;
+  display: grid; place-items: center; font-size: 30px;
+}
+.ecard h3 { margin: 0 0 3px; }
+.ecard-fam { font-size: .78rem; color: var(--ink-soft); font-weight: 700; }
+.ecard-goal { font-size: .9rem; color: var(--ink-soft); margin: 0; flex: 1; }
+
+.ecard-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  font-size: .74rem; font-weight: 800; padding: 5px 11px;
+  border-radius: 999px; background: var(--grid); color: var(--ink);
+}
+.pill.src { background: var(--aqua-soft); color: #0d6b4a; }
+.pill.opt { background: var(--yellow-soft); color: #7a5400; }
+
+.dots { display: flex; gap: 4px; align-items: center; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--grid); }
+.dot.on { background: var(--orange); }
+
+/* colour variants */
+.c-blue    { background: var(--blue-soft); }
+.c-orange  { background: var(--orange-soft); }
+.c-aqua    { background: var(--aqua-soft); }
+.c-yellow  { background: var(--yellow-soft); }
+.c-magenta { background: var(--magenta-soft); }
+.c-green   { background: var(--green-soft); }
+
+/* ---------------------------------------------------------------- session */
+
+.session { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: start; }
+@media (max-width: 900px) { .session { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--paper); border: 2px solid var(--grid);
+  border-radius: var(--r-lg); padding: 22px; box-shadow: var(--shadow);
+}
+.card + .card { margin-top: 20px; }
+.card h2 { display: flex; align-items: center; gap: 10px; }
+
+.stagewrap { text-align: center; }
+.posefig { width: 100%; max-width: 400px; height: auto; }
+
+.pf-bone   { stroke: var(--ink); stroke-width: 5.5; stroke-linecap: round; fill: none; }
+.pf-spine  { stroke-width: 6.5; }
+.pf-far    { stroke: var(--ink-soft); opacity: .42; }
+.pf-head   { fill: var(--ink); }
+.pf-joint  { fill: var(--orange); }
+.pf-joint.pf-far { fill: var(--ink-soft); opacity: .42; }
+.pf-floor  { stroke: var(--rule); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 2 7; }
+.pf-arrow  { stroke: var(--blue); stroke-width: 3.5; stroke-linecap: round; }
+.pf-arrowhead { fill: var(--blue); }
+.pf-pulse  { fill: none; stroke: var(--blue); stroke-width: 3; opacity: .8; }
+.pf-missing { fill: var(--ink-soft); font-size: 11px; font-family: inherit; }
+
+html:not(.calm-mode) .pf-animated .pf-phase-a { animation: pfA 3.2s ease-in-out infinite; }
+html:not(.calm-mode) .pf-animated .pf-phase-b { animation: pfB 3.2s ease-in-out infinite; }
+html:not(.calm-mode) .pf-animated .pf-pulse   { animation: pfPulse 2s ease-in-out infinite; }
+@keyframes pfA { 0%,42% {opacity:1} 58%,100% {opacity:0} }
+@keyframes pfB { 0%,42% {opacity:0} 58%,100% {opacity:1} }
+@keyframes pfPulse { 0%,100% {r:9; opacity:.25} 50% {r:15; opacity:.75} }
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-animated .pf-phase-a, .pf-animated .pf-phase-b, .pf-animated .pf-pulse { animation: none !important; }
+  .pf-animated .pf-phase-b { opacity: 0; }
+  .ecard { transition: none; }
+}
+
+.stepline { font-size: .82rem; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; }
+.steptext { font-size: 1.18rem; font-weight: 700; margin: 10px 0 6px; }
+.stepcue  { color: var(--blue); font-weight: 800; font-size: 1rem; }
+
+.timer {
+  font-size: 3rem; font-weight: 800; font-variant-numeric: tabular-nums;
+  line-height: 1; margin: 14px 0 4px;
+}
+.timer.small { font-size: 1.6rem; }
+.timer-label { font-size: .8rem; color: var(--ink-soft); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+
+.controls { display: flex; gap: 11px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+
+.btn {
+  font: inherit; font-weight: 800; border-radius: var(--r-md); cursor: pointer;
+  padding: 14px 24px; min-height: 52px; border: 2px solid var(--ink);
+  background: var(--paper); color: var(--ink);
+  display: inline-flex; align-items: center; gap: 9px;
+}
+.btn:hover { background: var(--page); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn-primary:hover { background: #205fac; }
+.btn-go { background: var(--green); border-color: var(--green); color: #fff; }
+.btn-go:hover { background: #026b02; }
+.btn-ghost { border-color: var(--rule); color: var(--ink-soft); }
+.btn-sm { padding: 9px 15px; min-height: 44px; font-size: .88rem; }
+
+/* step rail */
+.rail { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+.rail li {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 11px 13px; border-radius: var(--r-md);
+  border: 2px solid var(--grid); background: var(--paper);
+}
+.rail li.done { border-color: var(--aqua); background: var(--aqua-soft); }
+.rail li.now  { border-color: var(--blue); background: var(--blue-soft); }
+.rail-n {
+  width: 30px; height: 30px; border-radius: 50%; flex: none;
+  background: var(--grid); color: var(--ink);
+  display: grid; place-items: center; font-weight: 800; font-size: .88rem;
+}
+.rail li.done .rail-n { background: var(--aqua); color: #fff; }
+.rail li.now  .rail-n { background: var(--blue); color: #fff; }
+.rail-t { font-size: .93rem; }
+.rail-p { font-size: .76rem; color: var(--ink-soft); font-weight: 700; margin-top: 3px; }
+
+/* progress bar */
+.bar { height: 14px; background: var(--grid); border-radius: 999px; overflow: hidden; margin: 6px 0 14px; }
+.bar > i { display: block; height: 100%; background: var(--aqua); border-radius: 999px; transition: width var(--step-dur); }
+
+/* stars */
+.stars { display: flex; gap: 5px; font-size: 1.5rem; }
+.star { filter: grayscale(1); opacity: .3; }
+.star.on { filter: none; opacity: 1; }
+
+/* ------------------------------------------------- original description box */
+
+.orig {
+  background: var(--yellow-soft); border: 2px solid var(--yellow);
+  border-radius: var(--r-md); padding: 16px 18px;
+}
+.orig h3 { margin: 0 0 8px; font-size: .96rem; display: flex; align-items: center; gap: 8px; }
+.orig p { margin: 0; font-size: .93rem; }
+.orig .src { margin-top: 10px; font-size: .8rem; color: var(--ink-soft); font-weight: 700; }
+
+.safety {
+  background: var(--orange-soft); border: 2px solid var(--orange);
+  border-radius: var(--r-md); padding: 14px 17px; font-size: .9rem;
+}
+.safety strong { display: block; margin-bottom: 4px; }
+
+/* ------------------------------------------------------------ builder tab */
+
+.builder { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+@media (max-width: 900px) { .builder { grid-template-columns: 1fr; } }
+
+label.fld { display: block; font-weight: 800; margin-bottom: 7px; font-size: .93rem; }
+.hint { font-size: .84rem; color: var(--ink-soft); margin: -3px 0 9px; }
+
+textarea, input[type="text"] {
+  width: 100%; font: inherit; padding: 14px 16px;
+  border: 2px solid var(--rule); border-radius: var(--r-md);
+  background: var(--paper); color: var(--ink); resize: vertical;
+}
+textarea { min-height: 200px; line-height: 1.55; }
+textarea:focus, input[type="text"]:focus { border-color: var(--blue); }
+
+.conf {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: .84rem; font-weight: 800; padding: 7px 13px; border-radius: 999px;
+}
+.conf.hi  { background: var(--aqua-soft);   color: #0d6b4a; }
+.conf.mid { background: var(--yellow-soft); color: #7a5400; }
+.conf.lo  { background: var(--orange-soft); color: #8c3311; }
+
+.warnbox {
+  background: var(--yellow-soft); border: 2px solid var(--yellow);
+  border-radius: var(--r-md); padding: 13px 16px; font-size: .88rem; margin-top: 14px;
+}
+.warnbox ul { margin: 6px 0 0; padding-left: 20px; }
+
+.method {
+  font-size: .82rem; color: var(--ink-soft); font-weight: 700;
+  border-top: 2px dashed var(--grid); margin-top: 16px; padding-top: 12px;
+}
+
+.empty { color: var(--ink-soft); text-align: center; padding: 40px 20px; }
+
+/* ------------------------------------------------------------- honesty tab */
+
+.htable { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.htable th, .htable td { text-align: left; padding: 12px 13px; border-bottom: 2px solid var(--grid); vertical-align: top; }
+.htable th { font-weight: 800; background: var(--page); }
+.htable tr:last-child td { border-bottom: none; }
+
+.tag { font-size: .74rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.tag.built  { background: var(--aqua-soft);    color: #0d6b4a; }
+.tag.part   { background: var(--yellow-soft);  color: #7a5400; }
+.tag.not    { background: var(--orange-soft);  color: #8c3311; }
+
+/* ----------------------------------------------------------------- footer */
+
+.foot {
+  border-top: 2px solid var(--grid); background: var(--paper);
+  padding: 26px 0; font-size: .85rem; color: var(--ink-soft);
+}
+.foot a { font-weight: 700; }
+
+/* --------------------------------------------------------------- utility */
+
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.spread { justify-content: space-between; }
+.mt { margin-top: 16px; }
+.mb { margin-bottom: 16px; }
+.muted { color: var(--ink-soft); }
+.small { font-size: .86rem; }
+
+@media print {
+  .topbar, .tabs, .controls, .chip { display: none !important; }
+  .card, .hero { box-shadow: none; border-color: #999; break-inside: avoid; }
+}
+
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#main">
+      <span class="brand-mark" aria-hidden="true">🤸</span>
+      <span>
+        <span class="brand-name">AI4Mobility</span><br>
+        <span class="brand-sub">Exercise helper for children and parents</span>
+      </span>
+    </a>
+    <div class="topbar-tools">
+      <button class="chip" id="toggle-text" type="button" aria-pressed="false">🔠 Bigger text</button>
+      <button class="chip" id="toggle-contrast" type="button" aria-pressed="false">◐ High contrast</button>
+      <button class="chip" id="toggle-calm" type="button" aria-pressed="false">🌙 Calm mode</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" data-tab="library"  aria-selected="true"  type="button">🏃 Exercises</button>
+    <button class="tab" role="tab" data-tab="session"  aria-selected="false" type="button">▶️ Do it now</button>
+    <button class="tab" role="tab" data-tab="builder"  aria-selected="false" type="button">✏️ Add your own</button>
+    <button class="tab" role="tab" data-tab="honesty"  aria-selected="false" type="button">🔍 What's real</button>
+  </nav>
+</div>
+
+<main id="main" class="wrap">
+
+  <!-- ============================================================ LIBRARY -->
+  <section class="panel" id="panel-library" role="tabpanel">
+    <div class="hero">
+      <h1>Let's move! 🎉</h1>
+      <p>
+        Pick an exercise below. Each one shows you a picture, one step at a time,
+        and the exact words it came from so a grown-up can check it. Go at
+        whatever speed feels right — there is no rush and no score to beat.
+      </p>
+      <div class="hero-stats">
+        <div class="hstat"><b id="stat-progs">–</b><span>Programmes</span></div>
+        <div class="hstat"><b id="stat-steps">–</b><span>Steps in total</span></div>
+        <div class="hstat"><b id="stat-src">–</b><span>NHS-sourced</span></div>
+      </div>
+    </div>
+
+    <div class="grid" id="library-grid"></div>
+
+    <div class="card mt">
+      <h2>👨‍👩‍👧 For grown-ups</h2>
+      <p class="small">
+        The exercise content here is adapted from published NHS paediatric
+        physiotherapy resources, each linked on its own page. This is a student
+        project and it is <strong>not</strong> a medical device and
+        <strong>not</strong> a substitute for your own physiotherapist's advice.
+        If your child has been given a specific programme, follow that one.
+        Stop any exercise that causes pain and seek advice.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================ SESSION -->
+  <section class="panel" id="panel-session" role="tabpanel" hidden></section>
+
+  <!-- ============================================================ BUILDER -->
+  <section class="panel" id="panel-builder" role="tabpanel" hidden>
+    <div class="hero">
+      <h1>Add your own exercise ✏️</h1>
+      <p>
+        Type or paste any exercise description — from a physiotherapy leaflet, a
+        letter, or in your own words — and the splitter will turn it into
+        numbered steps. Your original text is never changed or thrown away, and
+        every step is shown with how confident the splitter is about it.
+      </p>
+    </div>
+
+    <div class="builder">
+      <div class="card">
+        <label class="fld" for="builder-in">Exercise description</label>
+        <p class="hint">
+          Whole paragraphs are fine. If you already have numbered steps, they
+          will be kept exactly as you wrote them.
+        </p>
+        <textarea id="builder-in" placeholder="For example: Lie on your back with your knees bent and feet flat. Squeeze your bottom and lift your hips until they line up with your knees. Hold for 5 seconds, then lower slowly. Repeat 10 times."></textarea>
+        <div class="row mt">
+          <button class="btn btn-primary" id="split-btn" type="button">✂️ Split it into steps</button>
+          <button class="btn btn-ghost" id="clear-btn" type="button">Clear</button>
+        </div>
+
+        <p class="small muted mt"><strong>Try an example:</strong></p>
+        <div class="row">
+          <button class="btn btn-ghost btn-sm" type="button"
+            data-sample="Lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee. Repeat 10 times. Stop if pain becomes worse and seek advice from a healthcare professional.">NHS ankle flexion</button>
+          <button class="btn btn-ghost btn-sm" type="button"
+            data-sample="1. Kneel on the floor with your knees apart.&#10;2. Sit back onto your heels.&#10;3. Fold forward and rest your tummy between your thighs.&#10;4. Hold for 20 seconds and breathe slowly.">Already numbered</button>
+          <button class="btn btn-ghost btn-sm" type="button"
+            data-sample="Start on your hands and knees with your wrists under your shoulders. Breathe in and drop your tummy towards the floor, lifting your chest. Breathe out and round your back up towards the ceiling, tucking your chin. Repeat ten times, moving slowly.">Cat–Cow prose</button>
+        </div>
+      </div>
+
+      <div class="card" id="builder-out" aria-live="polite"></div>
+    </div>
+
+    <div class="card mt">
+      <h2>❓ Is this an AI language model?</h2>
+      <p class="small">
+        <strong>No.</strong> The splitter is a rule-based linguistic engine: it
+        segments sentences, splits them on connecting words like
+        <em>“then”</em> only when both halves read as instructions, classifies
+        each fragment as an action, a position, a hold, a repetition count or a
+        safety note, and pulls out numbers like “hold for 5 seconds” and
+        “repeat 10 times”. It is fully deterministic, runs entirely in your
+        browser, and makes no network requests.
+      </p>
+      <p class="small">
+        A language model would handle messier, more conversational descriptions
+        better. The code has a defined adapter interface for one, but it is
+        <strong>not connected to any model</strong> — see the
+        <em>What's real</em> tab for exactly what that would require.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================ HONESTY -->
+  <section class="panel" id="panel-honesty" role="tabpanel" hidden>
+    <div class="hero">
+      <h1>What's actually built 🔍</h1>
+      <p>
+        Every feature below is labelled honestly: fully built, partly built, or
+        not built at all. Where something is not built, the reason and the next
+        step are stated. Nothing here is described as working when it is not.
+      </p>
+      <div class="hero-stats" id="honesty-counts"></div>
+    </div>
+
+    <div class="card">
+      <table class="htable">
+        <thead>
+          <tr><th style="width:28%">Feature</th><th style="width:12%">Status</th><th>What that means</th></tr>
+        </thead>
+        <tbody id="honesty-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>🔜 What we would do next</h2>
+      <ol class="small">
+        <li><strong>Connect a language model to the splitter.</strong> Needs a server-side proxy holding the API key, a schema-constrained prompt, validation of the returned JSON, and the rule-based splitter kept as the fallback. The safety question — a model inventing an instruction that was not in the source — is why the original description is already displayed beside the steps.</li>
+        <li><strong>Live pose feedback.</strong> Run landmark detection on-device, compare joint angles against the target pose for the current step, and give a simple “try lifting a bit higher” prompt. Requires camera consent handling and an ethics amendment before any child uses it.</li>
+        <li><strong>Save progress.</strong> A small backend with accounts so a child's history persists and a physiotherapist can see adherence between appointments.</li>
+        <li><strong>Evaluate with real families.</strong> Nothing here has been tested with a child or a clinician. That is the largest gap in the whole project.</li>
+      </ol>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>
+      <strong>AI4Mobility</strong> — A60, MSc AI Research and Development Project (55-708252),
+      Sheffield Hallam University. Team Deepminds.
+    </p>
+    <p>
+      Exercise content adapted from
+      <a href="https://library.sheffieldchildrens.nhs.uk/general-lower-limb-exercises/" target="_blank" rel="noopener">Sheffield Children's NHS Foundation Trust — General lower limb exercises</a>,
+      <a href="https://library.sheffieldchildrens.nhs.uk/core-and-hip-stability-exercises/" target="_blank" rel="noopener">Core and hip stability exercises</a>,
+      <a href="https://library.sheffieldchildrens.nhs.uk/calf-control-exercises/" target="_blank" rel="noopener">Calf control exercises</a>
+      and <a href="https://www.yogabasics.com/asana/threading-the-needle/" target="_blank" rel="noopener">Yoga Basics — Threading the Needle</a>.
+    </p>
+    <p>
+      Student project. Not a medical device. Not a substitute for professional advice.
+    </p>
+  </div>
+</footer>
+
+<script>
+/* AUTO-GENERATED by platform/build.py from data/exercises.json.
+ * Do not edit this file directly — edit the JSON and re-run the build. */
+window.AI4M_DATA = {
+  "schema_version": "2.0",
+  "generated_for": "A60 - AI4Mobility: A Multimodal Assistive Platform for Parents Supporting Children with Mobility Difficulties",
+  "note": "Each programme stores the ORIGINAL source description verbatim in `original_description`. The `steps` array is the output of the step-splitting engine, reviewed by hand. Both are shown in the interface so a parent can compare them.",
+  "programmes": [
+    {
+      "id": "childs-pose",
+      "title": "Child's Pose",
+      "also_called": "Balasana",
+      "family": "Stretch and relax",
+      "icon": "🐢",
+      "colour": "aqua",
+      "difficulty": 1,
+      "duration_min": 2,
+      "why_kids_like_it": "You get to curl up like a sleepy turtle hiding in its shell.",
+      "goal": "Gently lengthens the lower back and hips and gives a calm resting position between harder exercises.",
+      "source_name": "Common therapeutic resting posture; described in paediatric and adult stretch programmes",
+      "source_url": "",
+      "evidence_label": "Described from standard practice — not copied from a single NHS leaflet",
+      "original_description": "Kneel on the floor with your knees apart and your big toes touching. Sit back onto your heels, then fold forward and rest your tummy between your thighs. Stretch your arms out in front of you along the floor and let your forehead rest down. Breathe slowly and hold the position, then walk your hands back and sit up.",
+      "safety": "Stop if there is knee or hip pain. A cushion under the hips or knees makes it easier.",
+      "steps": [
+        {
+          "n": 1,
+          "text": "Kneel on the floor with your knees apart and your big toes touching.",
+          "hold_s": 0,
+          "pose": "kneel",
+          "cue": "Knees wide like a frog."
+        },
+        {
+          "n": 2,
+          "text": "Sit back onto your heels.",
+          "hold_s": 0,
+          "pose": "sit_heels",
+          "cue": "Bottom down to your feet."
+        },
+        {
+          "n": 3,
+          "text": "Fold forward and rest your tummy between your thighs.",
+          "hold_s": 0,
+          "pose": "fold",
+          "cue": "Curl up small like a turtle."
+        },
+        {
+          "n": 4,
+          "text": "Stretch your arms out in front of you along the floor and let your forehead rest down.",
+          "hold_s": 0,
+          "pose": "arms_long",
+          "cue": "Long arms, sleepy head."
+        },
+        {
+          "n": 5,
+          "text": "Breathe slowly and hold the position.",
+          "hold_s": 20,
+          "pose": "arms_long",
+          "cue": "Big slow breaths."
+        },
+        {
+          "n": 6,
+          "text": "Walk your hands back and sit up.",
+          "hold_s": 0,
+          "pose": "kneel",
+          "cue": "Slowly wake up."
+        }
+      ]
+    },
+    {
+      "id": "cat-cow",
+      "title": "Cat–Cow Stretch",
+      "also_called": "Marjaryasana–Bitilasana",
+      "family": "Stretch and mobility",
+      "icon": "🐱",
+      "colour": "orange",
+      "difficulty": 1,
+      "duration_min": 3,
+      "why_kids_like_it": "You get to be a grumpy cat and then a happy cow, over and over.",
+      "goal": "Moves the spine through bending and arching to improve back mobility and body awareness.",
+      "source_name": "Widely used paediatric mobility exercise; taught as a two-part flow",
+      "source_url": "",
+      "evidence_label": "Described from standard practice — not copied from a single NHS leaflet",
+      "original_description": "Start on your hands and knees with your wrists under your shoulders and your knees under your hips. Breathe in and drop your tummy towards the floor, lifting your chest and looking gently forwards — this is Cow. Breathe out and round your back up towards the ceiling, tucking your chin towards your chest — this is Cat. Move slowly between the two positions and repeat ten times.",
+      "safety": "Move slowly and only as far as is comfortable. Stop if there is neck or back pain.",
+      "steps": [
+        {
+          "n": 1,
+          "text": "Start on your hands and knees with your wrists under your shoulders and your knees under your hips.",
+          "hold_s": 0,
+          "pose": "table",
+          "cue": "Strong table, flat back."
+        },
+        {
+          "n": 2,
+          "text": "Breathe in and drop your tummy towards the floor, lifting your chest and looking gently forwards.",
+          "hold_s": 3,
+          "pose": "cow",
+          "cue": "Happy cow — tummy down."
+        },
+        {
+          "n": 3,
+          "text": "Breathe out and round your back up towards the ceiling, tucking your chin towards your chest.",
+          "hold_s": 3,
+          "pose": "cat",
+          "cue": "Grumpy cat — back up high."
+        },
+        {
+          "n": 4,
+          "text": "Move slowly between the two positions and repeat ten times.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "flow",
+          "cue": "Cow … cat … cow … cat."
+        }
+      ]
+    },
+    {
+      "id": "thread-the-needle",
+      "title": "Thread the Needle",
+      "also_called": "Parsva Balasana",
+      "family": "Stretch and mobility",
+      "icon": "🧵",
+      "colour": "magenta",
+      "difficulty": 2,
+      "duration_min": 3,
+      "why_kids_like_it": "Your arm sneaks through a gap like thread going through a needle.",
+      "goal": "Stretches the shoulders, arms, upper back and neck, and adds a gentle rotation to the upper spine.",
+      "source_name": "Yoga Basics — Threading the Needle",
+      "source_url": "https://www.yogabasics.com/asana/threading-the-needle/",
+      "evidence_label": "Instructions adapted from the cited source",
+      "original_description": "Start in Table pose on hands and knees, then slide the right hand between the left hand and left knee. Slide the arm all the way out to the left so that the right shoulder and side of the head rest comfortably on the floor. Inhale and reach the left hand up towards the ceiling. Breathe and hold for 3 to 6 breaths. Release by exhaling your palm back down and slowly inhaling to return to Table pose. Repeat on the opposite side.",
+      "safety": "Avoid if there is recent or chronic injury to the knees, shoulders or neck. A folded blanket under the knees protects them from pressure.",
+      "steps": [
+        {
+          "n": 1,
+          "text": "Start in Table pose on hands and knees.",
+          "hold_s": 0,
+          "pose": "table",
+          "cue": "Strong table again."
+        },
+        {
+          "n": 2,
+          "text": "Slide the right hand between the left hand and left knee.",
+          "hold_s": 0,
+          "pose": "thread_start",
+          "cue": "Sneak your hand through the gap."
+        },
+        {
+          "n": 3,
+          "text": "Slide the arm all the way out to the left so that the right shoulder and side of the head rest comfortably on the floor.",
+          "hold_s": 0,
+          "pose": "thread",
+          "cue": "Rest your cheek on the floor."
+        },
+        {
+          "n": 4,
+          "text": "Inhale and reach the left hand up towards the ceiling.",
+          "hold_s": 0,
+          "pose": "thread_reach",
+          "cue": "Point at the sky."
+        },
+        {
+          "n": 5,
+          "text": "Breathe and hold for 3 to 6 breaths.",
+          "hold_s": 20,
+          "pose": "thread_reach",
+          "cue": "Count your breaths."
+        },
+        {
+          "n": 6,
+          "text": "Exhale your palm back down and slowly inhale to return to Table pose.",
+          "hold_s": 0,
+          "pose": "table",
+          "cue": "Come back up."
+        },
+        {
+          "n": 7,
+          "text": "Repeat on the opposite side.",
+          "hold_s": 0,
+          "pose": "thread_mirror",
+          "cue": "Now the other arm."
+        }
+      ]
+    },
+    {
+      "id": "nhs-lower-limb",
+      "title": "Lower Limb Exercises",
+      "also_called": "NHS general lower limb guide",
+      "family": "Strength — legs",
+      "icon": "🦵",
+      "colour": "blue",
+      "difficulty": 2,
+      "duration_min": 10,
+      "why_kids_like_it": "Six quick leg missions you can do lying down.",
+      "goal": "General lower limb range of movement and strengthening, done lying down so it is accessible from bed.",
+      "source_name": "Sheffield Children's NHS Foundation Trust — General lower limb exercises",
+      "source_url": "https://library.sheffieldchildrens.nhs.uk/general-lower-limb-exercises/",
+      "evidence_label": "Instructions adapted from the cited NHS source",
+      "original_description": "Ankle flexion: lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee. Repeat 10 times. Quadriceps contraction: lay on your back with your legs outstretched and your foot and toes pointing upward. Push your knee down firmly against the bed and hold for 5 seconds. Repeat 10 times. Glute squeeze: lay on your back with legs outstretched. Squeeze your bottom firmly together, hold for 5 seconds then relax. Repeat 10 times. Knee bending: lay on your back or sit. Bend your knee by bringing your heel towards your bottom, then return to the starting position. Repeat 10 times. Hip abduction: lay on your back with your legs together. Keeping your leg straight, bring your leg out to the side and return to the starting position. Make sure that you keep your knee and foot in line and your toes pointing upwards. Repeat 10 times. Prone lying: lay on your tummy with your head and arms positioned comfortably. Make sure your hips are level and in contact with the bed. Lie for 30 minutes.",
+      "safety": "These are general exercises. Follow the specific programme given by your own physiotherapist. Stop and seek advice if pain gets worse.",
+      "steps": [
+        {
+          "n": 1,
+          "text": "Ankle flexion: lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "supine_ankle",
+          "cue": "Point … and pull up."
+        },
+        {
+          "n": 2,
+          "text": "Quadriceps contraction: with your legs outstretched and toes pointing upward, push your knee down firmly against the bed.",
+          "hold_s": 5,
+          "reps": 10,
+          "pose": "supine_quad",
+          "cue": "Squash the bed with your knee."
+        },
+        {
+          "n": 3,
+          "text": "Glute squeeze: lay on your back with legs outstretched and squeeze your bottom firmly together, then relax.",
+          "hold_s": 5,
+          "reps": 10,
+          "pose": "supine_glute",
+          "cue": "Squeeze … and let go."
+        },
+        {
+          "n": 4,
+          "text": "Knee bending: lay on your back or sit, then bend your knee by bringing your heel towards your bottom and return to the start.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "knee_bend",
+          "cue": "Heel to your bottom."
+        },
+        {
+          "n": 5,
+          "text": "Hip abduction: lay on your back with legs together. Keeping your leg straight, bring your leg out to the side and return. Keep your knee and foot in line and your toes pointing upwards.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "hip_abduct",
+          "cue": "Slide your leg out sideways."
+        },
+        {
+          "n": 6,
+          "text": "Prone lying: lay on your tummy with your head and arms comfortable and your hips level and in contact with the bed.",
+          "hold_s": 1800,
+          "pose": "prone",
+          "cue": "Rest on your tummy."
+        }
+      ]
+    },
+    {
+      "id": "paediatric-core-hip",
+      "title": "Paediatric Physiotherapy Exercises",
+      "also_called": "Core and hip stability",
+      "family": "Strength — core and hips",
+      "icon": "💪",
+      "colour": "green",
+      "difficulty": 3,
+      "duration_min": 12,
+      "why_kids_like_it": "Seven strength challenges, including one called the Dead Bug.",
+      "goal": "Builds core and hip stability, which supports balance, walking and the harder movements in the other programmes.",
+      "source_name": "Sheffield Children's NHS Foundation Trust — Core and hip stability exercises",
+      "source_url": "https://library.sheffieldchildrens.nhs.uk/core-and-hip-stability-exercises/",
+      "evidence_label": "Instructions adapted from the cited NHS source",
+      "original_description": "All exercises should be performed 10 times, 3 to 4 times daily throughout the day, and all movements should be slow and smooth. Hip clams: lie on your side with the affected side on top, bend both legs and keep your pelvis level. Slowly lift your top knee away from the bottom knee, keeping feet and ankles together, then lower back down. Bridging: lie on your back with knees bent and feet apart and firmly on the surface. Squeeze your buttocks together and push through your heels, raising your bottom until your hips line up with your knees. Hold for 5 seconds. Four point kneeling: on hands and knees with wrists below shoulders and knees below hips, pull your stomach up and in, then extend one leg straight behind and hold for 5 seconds. Repeat on the opposite leg. One leg stands: stand upright on the affected leg using support if needed, keep your pelvis level and hold for 5 to 10 seconds. Hip hitching: standing upright, keep your pelvis level, lift your hip towards your shoulder and hold for 5 seconds. Dead bug: lie on your back with arms extended straight above and legs bent at right angles, then extend one arm overhead while lowering the opposite leg and return. Four point hip extension: lie on your stomach, bend the affected knee to a right angle and slowly raise your foot towards the ceiling, holding for 5 seconds.",
+      "safety": "If pain becomes worse, stop the exercises and seek advice from a healthcare professional. Only perform the movements prescribed for your current stage.",
+      "steps": [
+        {
+          "n": 1,
+          "text": "Hip clams: lie on your side with both legs bent and your pelvis level. Slowly lift your top knee away from the bottom knee, keeping feet and ankles together, then lower back down.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "clam",
+          "cue": "Open like a clam shell."
+        },
+        {
+          "n": 2,
+          "text": "Bridging: lie on your back with knees bent and feet firmly down. Squeeze your buttocks and push through your heels, raising your bottom until your hips line up with your knees.",
+          "hold_s": 5,
+          "reps": 10,
+          "pose": "bridge",
+          "cue": "Build a bridge with your hips."
+        },
+        {
+          "n": 3,
+          "text": "Four point kneeling: on hands and knees, pull your stomach up and in, then extend one leg straight behind you. Repeat on the opposite leg.",
+          "hold_s": 5,
+          "reps": 10,
+          "pose": "quadruped_leg",
+          "cue": "Long leg like a plane wing."
+        },
+        {
+          "n": 4,
+          "text": "One leg stands: stand upright on one leg, using support if needed, and keep your pelvis level.",
+          "hold_s": 10,
+          "reps": 10,
+          "pose": "one_leg",
+          "cue": "Stand tall like a flamingo."
+        },
+        {
+          "n": 5,
+          "text": "Hip hitching: standing upright with your pelvis level, lift your hip towards your shoulder.",
+          "hold_s": 5,
+          "reps": 10,
+          "pose": "hip_hitch",
+          "cue": "Shrug with your hip."
+        },
+        {
+          "n": 6,
+          "text": "Dead bug: lie on your back with arms straight above and legs bent at right angles. Extend one arm overhead while lowering the opposite leg, then return.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "dead_bug",
+          "cue": "Wiggle like an upside-down bug."
+        },
+        {
+          "n": 7,
+          "text": "Four point hip extension: lie on your stomach, bend your knee to a right angle and slowly raise your foot towards the ceiling.",
+          "hold_s": 5,
+          "reps": 10,
+          "pose": "prone_hip_ext",
+          "cue": "Press your foot at the ceiling."
+        }
+      ]
+    },
+    {
+      "id": "calf-control",
+      "title": "Calf Control",
+      "also_called": "Heel raises and calf work",
+      "family": "Strength — legs",
+      "icon": "🦶",
+      "colour": "yellow",
+      "difficulty": 2,
+      "duration_min": 6,
+      "why_kids_like_it": "Bonus level — tiptoe like you are sneaking up on someone.",
+      "goal": "Builds calf strength and control, which supports walking, stair climbing and balance.",
+      "source_name": "Sheffield Children's NHS Foundation Trust — Calf control exercises",
+      "source_url": "https://library.sheffieldchildrens.nhs.uk/calf-control-exercises/",
+      "evidence_label": "Optional extra programme — title and source verified, step wording written by the team and NOT copied from the leaflet",
+      "optional": true,
+      "original_description": "Stand upright holding a support such as a worktop. Rise up onto your toes slowly and with control, then lower your heels back to the floor slowly. Keep your ankles in line and do not let them roll outwards. Progress by using less support and then by working one leg at a time.",
+      "safety": "This is an optional extra added by the team. Always use a support until balance is confident. Confirm with your physiotherapist before adding it.",
+      "steps": [
+        {
+          "n": 1,
+          "text": "Stand upright holding a support such as a worktop.",
+          "hold_s": 0,
+          "pose": "stand",
+          "cue": "Hold on tight."
+        },
+        {
+          "n": 2,
+          "text": "Rise up onto your toes slowly and with control.",
+          "hold_s": 3,
+          "reps": 10,
+          "pose": "heel_raise",
+          "cue": "Sneaky tiptoes."
+        },
+        {
+          "n": 3,
+          "text": "Lower your heels back to the floor slowly.",
+          "hold_s": 0,
+          "reps": 10,
+          "pose": "stand",
+          "cue": "Down like a slow lift."
+        },
+        {
+          "n": 4,
+          "text": "Keep your ankles in line and do not let them roll outwards.",
+          "hold_s": 0,
+          "pose": "stand",
+          "cue": "Straight ankles."
+        }
+      ]
+    }
+  ]
+};
+
+</script>
+<script>
+/* =============================================================================
+   AI4Mobility — Exercise Step Splitter
+   -----------------------------------------------------------------------------
+   Takes a free-text exercise description and splits it into ordered, actionable
+   steps.
+
+   HONEST STATEMENT OF METHOD (this matters — see docs/report):
+   This is a RULE-BASED linguistic splitter. It is NOT a large language model.
+   No model weights are loaded and no network call is made. Everything below is
+   deterministic, inspectable and runs offline in the browser.
+
+   An LLM adapter interface is defined at the bottom of this file
+   (`LLMSplitterAdapter`). It is a STUB: it is not connected to any provider and
+   returns null. It exists so the swap is a one-file change, and so the report
+   can describe exactly what would be required. Do not present it as working.
+
+   Pipeline
+   --------
+     1. normalise()        clean whitespace, unify quotes/dashes, expand "&"
+     2. detectExplicit()   if the author already numbered or bulleted the steps,
+                           trust that and stop — never re-split a numbered list
+     3. segment()          sentence segmentation with abbreviation protection
+     4. splitCompound()    break sentences on coordinating connectives, but only
+                           when BOTH sides look like instructions
+     5. classify()         label each fragment: action | position | hold | reps |
+                           safety | context
+     6. extractParams()    pull hold seconds and repetition counts out of text
+     7. score()            per-step confidence + an overall confidence
+     8. assemble()         drop non-instructional fragments, order, renumber
+   ============================================================================= */
+
+(function (global) {
+  'use strict';
+
+  /* ---------------------------------------------------------------- lexicon */
+
+  // Verbs that begin an instruction. Ordered roughly by frequency in the NHS
+  // and physiotherapy leaflets used as source material.
+  const ACTION_VERBS = [
+    'lie', 'lay', 'sit', 'stand', 'kneel', 'start', 'begin', 'come', 'get',
+    'place', 'put', 'position', 'rest', 'set',
+    'bend', 'straighten', 'extend', 'flex', 'stretch', 'reach', 'raise',
+    'lift', 'lower', 'drop', 'push', 'pull', 'press', 'squeeze', 'tighten',
+    'relax', 'release', 'hold', 'keep', 'maintain',
+    'move', 'slide', 'bring', 'take', 'turn', 'rotate', 'twist', 'roll',
+    'point', 'tuck', 'curl', 'round', 'arch', 'fold', 'open', 'close',
+    'breathe', 'inhale', 'exhale',
+    'repeat', 'return', 'continue', 'swap', 'switch', 'change',
+    'walk', 'step', 'rise', 'stay', 'pause', 'stop', 'avoid', 'ensure', 'make'
+  ];
+
+  // Phrases that mark a resting/starting position rather than a movement.
+  const POSITION_MARKERS = [
+    'starting position', 'start position', 'position:', 'starting:',
+    'begin in', 'start in', 'from a', 'in the position'
+  ];
+
+  // Phrases that mark safety guidance rather than a step to perform.
+  const SAFETY_MARKERS = [
+    'stop if', 'seek advice', 'do not', "don't", 'avoid', 'caution',
+    'if pain', 'if it hurts', 'should not', 'never ', 'consult',
+    'healthcare professional', 'physiotherapist', 'contraindic'
+  ];
+
+  // Coordinators we are willing to split a sentence on.
+  const SPLIT_CONNECTIVES = [
+    ', then ', ' then ', ', and then ', ' and then ',
+    ', next ', ' next, ', ', after that ', ' after that ',
+    ', followed by ', '; '
+  ];
+
+  // Abbreviations that must not end a sentence.
+  const ABBREVIATIONS = [
+    'e.g.', 'i.e.', 'etc.', 'approx.', 'dr.', 'mr.', 'mrs.', 'ms.',
+    'st.', 'no.', 'vs.', 'fig.', 'sec.', 'min.', 'reps.'
+  ];
+
+  /* -------------------------------------------------------------- normalise */
+
+  function normalise(text) {
+    if (typeof text !== 'string') return '';
+    return text
+      .replace(/\r\n?/g, '\n')
+      .replace(/[‘’]/g, "'")
+      .replace(/[“”]/g, '"')
+      .replace(/[–—]/g, '-')
+      .replace(/ /g, ' ')
+      .replace(/\s*&\s*/g, ' and ')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  /* --------------------------------------------------- explicit list detect */
+
+  // If the author has already numbered or bulleted their steps, splitting again
+  // does more harm than good. Detect and preserve that structure.
+  function detectExplicit(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) return null;
+
+    const NUMBERED = /^(\d{1,2})\s*[.)\]:-]\s+(.{3,})$/;
+    const BULLETED = /^[-*•‣◦⁃]\s+(.{3,})$/;
+
+    const numbered = [];
+    const bulleted = [];
+    lines.forEach(l => {
+      const n = l.match(NUMBERED);
+      if (n) numbered.push(n[2].trim());
+      const b = l.match(BULLETED);
+      if (b) bulleted.push(b[1].trim());
+    });
+
+    // Require the marked lines to be the clear majority of the input.
+    if (numbered.length >= 2 && numbered.length >= lines.length * 0.6) {
+      return { items: numbered, kind: 'numbered' };
+    }
+    if (bulleted.length >= 2 && bulleted.length >= lines.length * 0.6) {
+      return { items: bulleted, kind: 'bulleted' };
+    }
+    return null;
+  }
+
+  /* ---------------------------------------------------------- segmentation */
+
+  function segment(text) {
+    const protectedText = text.replace(/\b(\d+)\.(\d+)/g, '$1<DEC>$2');
+    let working = protectedText;
+    ABBREVIATIONS.forEach((abbr, i) => {
+      const re = new RegExp(abbr.replace(/\./g, '\\.'), 'gi');
+      working = working.replace(re, `<ABBR${i}>`);
+    });
+
+    const parts = working
+      .split(/(?<=[.!?])\s+(?=[A-Z0-9])|\n+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    return parts.map(s => {
+      let out = s.replace(/<DEC>/g, '.');
+      ABBREVIATIONS.forEach((abbr, i) => {
+        out = out.replace(new RegExp(`<ABBR${i}>`, 'g'), abbr);
+      });
+      return out.trim();
+    }).filter(s => s.length > 2);
+  }
+
+  /* ------------------------------------------------------- compound split */
+
+  function startsWithAction(fragment) {
+    const first = fragment.trim().toLowerCase().split(/[^a-z']+/).filter(Boolean)[0];
+    if (!first) return false;
+    if (ACTION_VERBS.includes(first)) return true;
+    // "Slowly lift ..." — allow one leading adverb.
+    const words = fragment.trim().toLowerCase().split(/[^a-z']+/).filter(Boolean);
+    if (words.length > 1 && /ly$/.test(words[0]) && ACTION_VERBS.includes(words[1])) return true;
+    return false;
+  }
+
+  function splitCompound(sentence) {
+    // Try each connective; only accept the split if the right-hand side reads
+    // as its own instruction. This is what stops "lift your leg and hold it
+    // level" from becoming two useless fragments.
+    for (const conn of SPLIT_CONNECTIVES) {
+      const idx = sentence.toLowerCase().indexOf(conn);
+      if (idx > 8) {
+        const left = sentence.slice(0, idx).trim().replace(/[,;]$/, '');
+        const right = sentence.slice(idx + conn.length).trim();
+        if (left.length > 8 && right.length > 8 && startsWithAction(right)) {
+          return [left, ...splitCompound(right)];
+        }
+      }
+    }
+    return [sentence];
+  }
+
+  /* ------------------------------------------------------------- classify */
+
+  function classify(fragment) {
+    const low = fragment.toLowerCase();
+
+    if (SAFETY_MARKERS.some(m => low.includes(m))) return 'safety';
+    if (POSITION_MARKERS.some(m => low.includes(m))) return 'position';
+    if (/^(hold|keep|maintain|stay)\b/.test(low)) return 'hold';
+    if (/^(repeat|do this|perform)\b/.test(low) || /\brepeat\s+\d+\s+times\b/.test(low)) return 'reps';
+    if (startsWithAction(fragment)) return 'action';
+    if (/^(lie|lay|sit|stand|kneel|start|begin)\b/.test(low)) return 'position';
+    return 'context';
+  }
+
+  /* --------------------------------------------------------- parameters */
+
+  const NUM_WORDS = {
+    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7,
+    eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, fifteen: 15,
+    twenty: 20, thirty: 30, sixty: 60
+  };
+
+  function toNumber(token) {
+    if (token == null) return null;
+    const t = String(token).toLowerCase().trim();
+    if (/^\d+$/.test(t)) return parseInt(t, 10);
+    if (NUM_WORDS[t] != null) return NUM_WORDS[t];
+    return null;
+  }
+
+  function extractParams(fragment) {
+    const low = fragment.toLowerCase();
+    const params = { hold_s: null, reps: null, minutes: null };
+
+    // hold for 5 seconds / hold for five seconds / hold 5-10 seconds
+    let m = low.match(/hold(?:ing)?(?:\s+(?:it|this|the position))?\s+(?:for\s+)?(\d+|[a-z]+)(?:\s*(?:-|to)\s*(\d+|[a-z]+))?\s*(?:seconds?|secs?|s)\b/);
+    if (m) {
+      const a = toNumber(m[1]);
+      const b = toNumber(m[2]);
+      if (a != null) params.hold_s = b != null ? Math.round((a + b) / 2) : a;
+    }
+
+    // lie for 30 minutes
+    m = low.match(/(?:for\s+)?(\d+|[a-z]+)\s*(?:minutes?|mins?)\b/);
+    if (m) {
+      const a = toNumber(m[1]);
+      if (a != null) params.minutes = a;
+    }
+
+    // repeat 10 times / do this ten times / 10 repetitions / x10
+    m = low.match(/(\d+|[a-z]+)\s*(?:times|reps|repetitions)\b/);
+    if (m) {
+      const a = toNumber(m[1]);
+      if (a != null && a <= 100) params.reps = a;
+    }
+    if (params.reps == null) {
+      m = low.match(/\bx\s*(\d{1,3})\b/);
+      if (m) params.reps = parseInt(m[1], 10);
+    }
+
+    return params;
+  }
+
+  /* ------------------------------------------------------------- scoring */
+
+  function scoreStep(fragment, kind) {
+    let s = 0.4;
+    if (kind === 'action') s += 0.35;
+    else if (kind === 'position') s += 0.25;
+    else if (kind === 'hold' || kind === 'reps') s += 0.2;
+
+    const words = fragment.split(/\s+/).length;
+    if (words >= 4 && words <= 28) s += 0.15;      // sensible instruction length
+    else if (words > 40) s -= 0.2;                  // probably still compound
+
+    if (/\b(your|the)\b/.test(fragment.toLowerCase())) s += 0.05;  // addresses a body part
+    if (/[,;]\s*(and|then)\b/i.test(fragment)) s -= 0.1;           // unsplit compound
+
+    return Math.max(0.05, Math.min(0.99, s));
+  }
+
+  /* ------------------------------------------------------------- assemble */
+
+  function splitExerciseText(rawText, options) {
+    const opts = Object.assign({ keepSafety: true, minConfidence: 0.35 }, options || {});
+    const text = normalise(rawText);
+
+    if (!text) {
+      return { ok: false, reason: 'empty', steps: [], safety: [], confidence: 0, method: 'none' };
+    }
+    if (text.split(/\s+/).length < 4) {
+      return { ok: false, reason: 'too_short', steps: [], safety: [], confidence: 0, method: 'none' };
+    }
+
+    let fragments;
+    let method;
+
+    const explicit = detectExplicit(text);
+    if (explicit) {
+      fragments = explicit.items;
+      method = 'explicit-' + explicit.kind;
+    } else {
+      fragments = [];
+      segment(text).forEach(sentence => {
+        splitCompound(sentence).forEach(f => fragments.push(f));
+      });
+      method = 'rule-based';
+    }
+
+    const safety = [];
+    const steps = [];
+
+    fragments.forEach(frag => {
+      const clean = frag.replace(/^[,;:\-\s]+/, '').replace(/[,;:\s]+$/, '').trim();
+      if (clean.length < 4) return;
+
+      const kind = classify(clean);
+      if (kind === 'safety') {
+        if (opts.keepSafety) safety.push(sentenceCase(clean));
+        return;
+      }
+
+      const conf = scoreStep(clean, kind);
+      if (kind === 'context' && conf < opts.minConfidence) return;
+
+      const params = extractParams(clean);
+      steps.push({
+        n: 0,
+        text: sentenceCase(clean),
+        kind: kind,
+        hold_s: params.hold_s || (params.minutes ? params.minutes * 60 : 0),
+        reps: params.reps || null,
+        confidence: Math.round(conf * 100) / 100
+      });
+    });
+
+    steps.forEach((s, i) => { s.n = i + 1; });
+
+    const confidence = steps.length
+      ? Math.round((steps.reduce((a, s) => a + s.confidence, 0) / steps.length) * 100) / 100
+      : 0;
+
+    return {
+      ok: steps.length > 0,
+      reason: steps.length ? 'ok' : 'no_steps_found',
+      method: method,
+      steps: steps,
+      safety: safety,
+      confidence: confidence,
+      warnings: buildWarnings(steps, confidence)
+    };
+  }
+
+  function buildWarnings(steps, confidence) {
+    const w = [];
+    if (steps.length === 1) {
+      w.push('Only one step was found. If the description has more, try putting each instruction on its own line.');
+    }
+    if (steps.length > 15) {
+      w.push('That produced a lot of steps. Check whether some should be merged.');
+    }
+    if (confidence < 0.55 && steps.length) {
+      w.push('Low confidence — please read the steps and correct anything that looks wrong.');
+    }
+    const longOnes = steps.filter(s => s.text.split(/\s+/).length > 35).length;
+    if (longOnes) {
+      w.push(longOnes + ' step(s) are quite long and may still contain more than one instruction.');
+    }
+    return w;
+  }
+
+  function sentenceCase(s) {
+    const t = s.trim();
+    if (!t) return t;
+    let out = t.charAt(0).toUpperCase() + t.slice(1);
+    if (!/[.!?]$/.test(out)) out += '.';
+    return out;
+  }
+
+  /* --------------------------------------------------------- LLM adapter */
+
+  /**
+   * STUB — NOT IMPLEMENTED.
+   *
+   * This is the seam where a language model would replace the rule-based
+   * splitter. It is deliberately left unimplemented rather than faked.
+   *
+   * To implement it you would need to:
+   *   1. Choose a provider and hold an API key server-side (never in this file —
+   *      the platform is a static page and any key here would be public).
+   *   2. Add a small backend endpoint that proxies the request, so the key stays
+   *      on the server and requests can be rate-limited.
+   *   3. Send the description with a schema-constrained prompt asking for an
+   *      ordered array of {text, hold_s, reps}.
+   *   4. Validate the returned JSON against that schema before display, and keep
+   *      the rule-based splitter as the fallback when validation fails.
+   *   5. Review the clinical-safety implications: a model may invent an
+   *      instruction that was not in the source description. Any LLM output
+   *      shown to a parent would need the original text displayed beside it,
+   *      which is why the interface already does that.
+   *
+   * Until those five things are done, this returns null and the caller falls
+   * back to splitExerciseText().
+   */
+  const LLMSplitterAdapter = {
+    available: false,
+    reason: 'Not implemented. No model, no API key, no backend endpoint. See comments in splitter.js.',
+    async split(/* rawText */) {
+      return null;
+    }
+  };
+
+  /** Public entry point. Tries the LLM adapter, falls back to rules. */
+  async function splitExercise(rawText, options) {
+    if (LLMSplitterAdapter.available) {
+      try {
+        const viaLLM = await LLMSplitterAdapter.split(rawText);
+        if (viaLLM && Array.isArray(viaLLM.steps) && viaLLM.steps.length) {
+          return Object.assign({ method: 'llm' }, viaLLM);
+        }
+      } catch (e) {
+        /* fall through to rules */
+      }
+    }
+    return splitExerciseText(rawText, options);
+  }
+
+  const api = {
+    splitExercise,
+    splitExerciseText,
+    LLMSplitterAdapter,
+    _internal: { normalise, segment, splitCompound, classify, extractParams, detectExplicit, scoreStep }
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  global.AI4MSplitter = api;
+
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* =============================================================================
+   AI4Mobility — Pose Renderer
+   -----------------------------------------------------------------------------
+   Draws a stick-figure for each named pose as inline SVG.
+
+   HONEST STATEMENT OF METHOD:
+   These are HAND-AUTHORED joint coordinates, not the output of a pose
+   estimation model. They use the same skeleton connection list and the same
+   drawing logic as the MediaPipe-derived figures in the notebook, so the visual
+   language is consistent, but no landmark detection is running here.
+
+   Live pose detection from a camera is a separate, optional feature in app.js
+   and is clearly labelled there.
+
+   Coordinate frame: viewBox 0 0 220 150, y increases downward (image
+   convention, matching the raw landmark data). Floor is drawn at y = 134.
+   ============================================================================= */
+
+(function (global) {
+  'use strict';
+
+  const FLOOR_Y = 134;
+
+  // Skeleton connection list — the same joint pairs used in the notebook.
+  const LIMBS = [
+    ['neck', 'sho'],
+    ['sho', 'elb'], ['elb', 'wri'],
+    ['sho', 'elb2'], ['elb2', 'wri2'],
+    ['hip', 'kne'], ['kne', 'ank'], ['ank', 'toe'],
+    ['hip', 'kne2'], ['kne2', 'ank2'], ['ank2', 'toe2']
+  ];
+
+  /* ------------------------------------------------------------- pose bank */
+
+  const P = {
+    /* ---- standing ---- */
+    stand: {
+      label: 'Standing tall',
+      j: { head: [110, 26], neck: [110, 38], sho: [110, 46], hip: [110, 84],
+           elb: [101, 66], wri: [98, 88], elb2: [119, 66], wri2: [122, 88],
+           kne: [106, 108], ank: [104, 130], toe: [114, 134],
+           kne2: [114, 108], ank2: [116, 130], toe2: [126, 134] }
+    },
+    heel_raise: {
+      label: 'Up on tiptoes',
+      j: { head: [110, 20], neck: [110, 32], sho: [110, 40], hip: [110, 78],
+           elb: [101, 60], wri: [98, 82], elb2: [119, 60], wri2: [122, 82],
+           kne: [106, 102], ank: [104, 122], toe: [118, 134],
+           kne2: [114, 102], ank2: [116, 122], toe2: [128, 134] },
+      arrows: [[110, 60, 110, 40]]
+    },
+    one_leg: {
+      label: 'Balancing on one leg',
+      j: { head: [110, 26], neck: [110, 38], sho: [110, 46], hip: [110, 84],
+           elb: [94, 64], wri: [84, 78], elb2: [126, 64], wri2: [136, 78],
+           kne: [110, 108], ank: [110, 130], toe: [120, 134],
+           kne2: [130, 92], ank2: [126, 112], toe2: [136, 116] }
+    },
+    hip_hitch: {
+      label: 'Hip lifted towards the shoulder',
+      j: { head: [110, 26], neck: [110, 38], sho: [110, 46], hip: [110, 84],
+           elb: [100, 66], wri: [98, 88], elb2: [120, 66], wri2: [122, 88],
+           kne: [104, 108], ank: [104, 130], toe: [114, 134],
+           kne2: [122, 100], ank2: [124, 122], toe2: [134, 126] },
+      arrows: [[126, 92, 126, 76]]
+    },
+
+    /* ---- kneeling / child's pose ---- */
+    kneel: {
+      label: 'Kneeling tall',
+      floorY: 134,
+      j: { head: [104, 44], neck: [104, 56], sho: [104, 64], hip: [104, 100],
+           elb: [94, 82], wri: [92, 104], elb2: [114, 82], wri2: [116, 104],
+           kne: [104, 132], ank: [128, 133], toe: [140, 132],
+           kne2: [110, 132], ank2: [134, 133], toe2: [146, 132] }
+    },
+    sit_heels: {
+      label: 'Sitting back on your heels',
+      j: { head: [116, 66], neck: [116, 78], sho: [116, 86], hip: [116, 116],
+           elb: [106, 100], wri: [102, 116], elb2: [126, 100], wri2: [130, 116],
+           kne: [96, 130], ank: [126, 132], toe: [136, 133],
+           kne2: [92, 130], ank2: [122, 132], toe2: [132, 133] }
+    },
+    fold: {
+      label: 'Folding forward',
+      floorY: 138,
+      j: { head: [86, 128], neck: [98, 126], sho: [108, 124], hip: [148, 118],
+           elb: [98, 132], wri: [84, 135],
+           kne: [122, 136], ank: [152, 137], toe: [162, 137],
+           kne2: [118, 136], ank2: [148, 137], toe2: [158, 137] },
+      spineCtrl: [126, 130]
+    },
+    arms_long: {
+      label: "Child's Pose — long arms, sleepy head",
+      floorY: 138,
+      j: { head: [92, 128], neck: [104, 126], sho: [114, 124], hip: [152, 118],
+           elb: [82, 132], wri: [50, 136],
+           kne: [126, 136], ank: [156, 137], toe: [166, 137],
+           kne2: [122, 136], ank2: [152, 137], toe2: [162, 137] },
+      spineCtrl: [132, 130]
+    },
+
+    /* ---- quadruped family ---- */
+    table: {
+      label: 'Hands and knees — a strong table',
+      j: { head: [66, 88], neck: [78, 92], sho: [86, 92], hip: [140, 92],
+           elb: [86, 110], wri: [86, 130], elb2: [92, 110], wri2: [92, 130],
+           kne: [140, 112], ank: [140, 130], toe: [150, 132],
+           kne2: [146, 112], ank2: [146, 130], toe2: [156, 132] }
+    },
+    cow: {
+      label: 'Cow — tummy drops, chest lifts',
+      j: { head: [62, 78], neck: [74, 84], sho: [86, 88], hip: [140, 90],
+           elb: [86, 108], wri: [86, 130], elb2: [92, 108], wri2: [92, 130],
+           kne: [140, 112], ank: [140, 130], toe: [150, 132],
+           kne2: [146, 112], ank2: [146, 130], toe2: [156, 132] },
+      spineCtrl: [113, 108],
+      arrows: [[113, 92, 113, 106]]
+    },
+    cat: {
+      label: 'Cat — back rounds up, chin tucks',
+      j: { head: [70, 108], neck: [80, 100], sho: [88, 94], hip: [140, 94],
+           elb: [88, 112], wri: [88, 130], elb2: [94, 112], wri2: [94, 130],
+           kne: [140, 112], ank: [140, 130], toe: [150, 132],
+           kne2: [146, 112], ank2: [146, 130], toe2: [156, 132] },
+      spineCtrl: [114, 74],
+      arrows: [[114, 88, 114, 72]]
+    },
+    flow: {
+      label: 'Flowing between Cat and Cow',
+      alias: 'cow', animateWith: 'cat'
+    },
+    quadruped_leg: {
+      label: 'One leg stretched straight behind',
+      j: { head: [66, 88], neck: [78, 92], sho: [86, 92], hip: [140, 92],
+           elb: [86, 110], wri: [86, 130], elb2: [92, 110], wri2: [92, 130],
+           kne: [140, 112], ank: [140, 130], toe: [150, 132],
+           kne2: [166, 86], ank2: [192, 82], toe2: [202, 86] },
+      arrows: [[170, 96, 194, 88]]
+    },
+
+    /* ---- thread the needle ---- */
+    thread_start: {
+      label: 'Hand starting to slide through',
+      j: { head: [66, 90], neck: [78, 94], sho: [86, 94], hip: [140, 92],
+           elb: [92, 114], wri: [110, 130], elb2: [92, 110], wri2: [92, 130],
+           kne: [140, 112], ank: [140, 130], toe: [150, 132],
+           kne2: [146, 112], ank2: [146, 130], toe2: [156, 132] },
+      arrows: [[96, 122, 116, 130]]
+    },
+    thread: {
+      label: 'Shoulder and cheek resting on the floor',
+      floorY: 136,
+      j: { head: [72, 126], neck: [86, 122], sho: [98, 118], hip: [150, 96],
+           elb: [80, 132], wri: [48, 135], elb2: [106, 120], wri2: [108, 134],
+           kne: [150, 116], ank: [150, 134], toe: [162, 135],
+           kne2: [156, 116], ank2: [156, 134], toe2: [168, 135] }
+    },
+    thread_reach: {
+      label: 'Top arm reaching to the sky',
+      floorY: 136,
+      j: { head: [72, 126], neck: [86, 122], sho: [98, 118], hip: [150, 96],
+           elb: [80, 132], wri: [48, 135], elb2: [112, 96], wri2: [122, 68],
+           kne: [150, 116], ank: [150, 134], toe: [162, 135],
+           kne2: [156, 116], ank2: [156, 134], toe2: [168, 135] },
+      arrows: [[130, 84, 132, 62]]
+    },
+    thread_mirror: {
+      label: 'Now the other side',
+      alias: 'thread_reach', flip: true
+    },
+
+    /* ---- lying on the back ---- */
+    supine_ankle: {
+      label: 'On your back — pointing and pulling the foot',
+      floorY: 126,
+      j: { head: [54, 112], neck: [66, 112], sho: [78, 112], hip: [120, 112],
+           elb: [92, 100], wri: [110, 104],
+           kne: [148, 112], ank: [176, 112], toe: [188, 100],
+           kne2: [148, 118], ank2: [176, 118], toe2: [190, 124] },
+      arrows: [[196, 120, 196, 100]]
+    },
+    supine_quad: {
+      label: 'Pressing the knee down firmly',
+      floorY: 126,
+      j: { head: [54, 112], neck: [66, 112], sho: [78, 112], hip: [120, 112],
+           elb: [92, 100], wri: [110, 104],
+           kne: [148, 112], ank: [176, 112], toe: [188, 100],
+           kne2: [148, 118], ank2: [176, 118], toe2: [190, 108] },
+      arrows: [[148, 92, 148, 108]]
+    },
+    supine_glute: {
+      label: 'On your back, squeezing',
+      floorY: 126,
+      j: { head: [54, 112], neck: [66, 112], sho: [78, 112], hip: [120, 112],
+           elb: [92, 100], wri: [110, 104],
+           kne: [148, 112], ank: [176, 112], toe: [188, 102],
+           kne2: [148, 118], ank2: [176, 118], toe2: [190, 110] },
+      pulse: [122, 112]
+    },
+    knee_bend: {
+      label: 'Heel sliding towards your bottom',
+      floorY: 126,
+      j: { head: [54, 112], neck: [66, 112], sho: [78, 112], hip: [120, 112],
+           elb: [92, 100], wri: [108, 104],
+           kne: [150, 86], ank: [132, 104], toe: [124, 112],
+           kne2: [152, 118], ank2: [180, 118], toe2: [190, 110] },
+      arrows: [[168, 104, 150, 90]]
+    },
+    hip_abduct: {
+      label: 'Leg sliding out to the side',
+      floorY: 128,
+      j: { head: [54, 114], neck: [66, 114], sho: [78, 114], hip: [120, 114],
+           elb: [92, 102], wri: [108, 106],
+           kne: [148, 118], ank: [176, 118], toe: [188, 112],
+           kne2: [148, 94], ank2: [174, 82], toe2: [184, 76] },
+      arrows: [[152, 112, 176, 88]]
+    },
+    bridge: {
+      label: 'Hips lifted into a bridge',
+      floorY: 132,
+      j: { head: [54, 120], neck: [66, 120], sho: [78, 118], hip: [122, 92],
+           elb: [86, 126], wri: [104, 129],
+           kne: [150, 100], ank: [150, 128], toe: [164, 131],
+           kne2: [156, 100], ank2: [156, 128], toe2: [170, 131] },
+      spineCtrl: [98, 100],
+      arrows: [[122, 108, 122, 90]]
+    },
+    dead_bug: {
+      label: 'Dead Bug — opposite arm and leg',
+      floorY: 130,
+      j: { head: [54, 118], neck: [66, 118], sho: [78, 118], hip: [122, 118],
+           elb: [80, 96], wri: [84, 72], elb2: [60, 108], wri2: [38, 100],
+           kne: [122, 92], ank: [150, 92], toe: [160, 82],
+           kne2: [152, 112], ank2: [178, 120], toe2: [188, 114] },
+      arrows: [[40, 110, 26, 102], [174, 108, 186, 120]]
+    },
+
+    /* ---- lying on the tummy / side ---- */
+    prone: {
+      label: 'Resting on your tummy',
+      floorY: 128,
+      j: { head: [56, 114], neck: [68, 114], sho: [78, 114], hip: [120, 114],
+           elb: [58, 104], wri: [36, 102],
+           kne: [148, 114], ank: [176, 114], toe: [190, 120],
+           kne2: [148, 120], ank2: [176, 120], toe2: [190, 126] }
+    },
+    prone_hip_ext: {
+      label: 'Foot pressing up towards the ceiling',
+      floorY: 128,
+      j: { head: [56, 116], neck: [68, 116], sho: [78, 116], hip: [120, 116],
+           elb: [58, 106], wri: [36, 104],
+           kne: [148, 116], ank: [148, 86], toe: [162, 82],
+           kne2: [154, 122], ank2: [182, 122], toe2: [192, 128] },
+      arrows: [[158, 104, 158, 80]]
+    },
+    clam: {
+      label: 'Side lying — knee opens like a clam',
+      floorY: 138,
+      j: { head: [54, 108], neck: [66, 110], sho: [78, 110], hip: [122, 112],
+           elb: [92, 98], wri: [110, 94],
+           kne: [146, 126], ank: [122, 136], toe: [110, 134],
+           kne2: [150, 96], ank2: [124, 114], toe2: [112, 114] },
+      arrows: [[156, 118, 160, 96]]
+    }
+  };
+
+  /* -------------------------------------------------------------- helpers */
+
+  function esc(n) { return Math.round(n * 100) / 100; }
+
+  function line(a, b, cls) {
+    return `<line x1="${esc(a[0])}" y1="${esc(a[1])}" x2="${esc(b[0])}" y2="${esc(b[1])}" class="${cls}"/>`;
+  }
+
+  function arrow(a) {
+    const [x1, y1, x2, y2] = a;
+    return `<line x1="${esc(x1)}" y1="${esc(y1)}" x2="${esc(x2)}" y2="${esc(y2)}" class="pf-arrow" marker-end="url(#pf-head)"/>`;
+  }
+
+  function resolve(key) {
+    let pose = P[key];
+    if (!pose) return null;
+    let flip = !!pose.flip;
+    let animateWith = pose.animateWith || null;
+    while (pose && pose.alias) {
+      const next = P[pose.alias];
+      if (!next) break;
+      animateWith = animateWith || pose.animateWith || null;
+      pose = Object.assign({}, next, {
+        label: pose.label || next.label,
+        arrows: pose.arrows || next.arrows
+      });
+    }
+    return { pose, flip, animateWith };
+  }
+
+  /* ------------------------------------------------------------- renderer */
+
+  /**
+   * Render a pose as an SVG string.
+   * @param {string} key    pose key from the bank
+   * @param {object} opts   { animate:boolean, showFloor:boolean, title:string }
+   */
+  function render(key, opts) {
+    const o = Object.assign({ animate: true, showFloor: true, title: '' }, opts || {});
+    const found = resolve(key);
+
+    if (!found) {
+      return `<svg viewBox="0 0 220 150" class="posefig" role="img" aria-label="No picture available">
+        <text x="110" y="78" text-anchor="middle" class="pf-missing">no picture yet</text></svg>`;
+    }
+
+    const { pose, flip, animateWith } = found;
+    const j = pose.j;
+    const title = o.title || pose.label || '';
+
+    // ---- automatic framing -------------------------------------------------
+    // Compute a tight bounding box over everything that will be drawn, so every
+    // pose fills its frame consistently instead of floating in white space.
+    const floorY = pose.floorY != null ? pose.floorY : FLOOR_Y;
+    const box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+    function extend(x, y, r) {
+      r = r || 0;
+      box.x0 = Math.min(box.x0, x - r); box.x1 = Math.max(box.x1, x + r);
+      box.y0 = Math.min(box.y0, y - r); box.y1 = Math.max(box.y1, y + r);
+    }
+    Object.keys(j).forEach(k => extend(j[k][0], j[k][1], k === 'head' ? 10.5 : 3.5));
+    if (pose.spineCtrl) extend(pose.spineCtrl[0], pose.spineCtrl[1]);
+    (pose.arrows || []).forEach(a => { extend(a[0], a[1]); extend(a[2], a[3]); });
+    if (pose.pulse) extend(pose.pulse[0], pose.pulse[1], 16);
+    if (o.showFloor) extend(box.x0, floorY), extend(box.x1, floorY);
+
+    const PAD = 12;
+    box.x0 -= PAD; box.x1 += PAD; box.y0 -= PAD; box.y1 += PAD;
+
+    // Keep the aspect ratio in a sensible band so card heights stay stable.
+    let w = box.x1 - box.x0, h = box.y1 - box.y0;
+    const MIN_AR = 1.25, MAX_AR = 2.30;
+    if (w / h > MAX_AR) { const need = w / MAX_AR - h; box.y0 -= need / 2; box.y1 += need / 2; }
+    else if (w / h < MIN_AR) { const need = h * MIN_AR - w; box.x0 -= need / 2; box.x1 += need / 2; }
+    w = box.x1 - box.x0; h = box.y1 - box.y0;
+    const VB = `${esc(box.x0)} ${esc(box.y0)} ${esc(w)} ${esc(h)}`;
+
+    let body = '';
+
+    // floor — drawn only across the figure, not the whole canvas
+    if (o.showFloor) {
+      body += `<line x1="${esc(box.x0 + 4)}" y1="${floorY}" x2="${esc(box.x1 - 4)}" y2="${floorY}" class="pf-floor"/>`;
+    }
+
+    // spine: straight, or curved when a control point is given
+    if (j.neck && j.hip) {
+      if (pose.spineCtrl) {
+        body += `<path d="M ${esc(j.neck[0])} ${esc(j.neck[1])} Q ${esc(pose.spineCtrl[0])} ${esc(pose.spineCtrl[1])} ${esc(j.hip[0])} ${esc(j.hip[1])}" class="pf-bone pf-spine"/>`;
+      } else {
+        body += line(j.neck, j.hip, 'pf-bone pf-spine');
+      }
+    }
+
+    // far-side limbs first (drawn lighter, for depth)
+    LIMBS.forEach(([a, b]) => {
+      if (!j[a] || !j[b]) return;
+      const far = /2$/.test(a) || /2$/.test(b);
+      if (far) body += line(j[a], j[b], 'pf-bone pf-far');
+    });
+    LIMBS.forEach(([a, b]) => {
+      if (!j[a] || !j[b]) return;
+      const far = /2$/.test(a) || /2$/.test(b);
+      if (!far) body += line(j[a], j[b], 'pf-bone');
+    });
+
+    // head
+    if (j.head) {
+      body += `<circle cx="${esc(j.head[0])}" cy="${esc(j.head[1])}" r="9.5" class="pf-head"/>`;
+    }
+
+    // joints
+    Object.keys(j).forEach(k => {
+      if (k === 'head') return;
+      const far = /2$/.test(k);
+      body += `<circle cx="${esc(j[k][0])}" cy="${esc(j[k][1])}" r="${far ? 2.4 : 3.1}" class="pf-joint${far ? ' pf-far' : ''}"/>`;
+    });
+
+    // movement arrows
+    (pose.arrows || []).forEach(a => { body += arrow(a); });
+
+    // pulse marker for isometric holds (a squeeze with no visible movement)
+    if (pose.pulse) {
+      body += `<circle cx="${esc(pose.pulse[0])}" cy="${esc(pose.pulse[1])}" r="10" class="pf-pulse"/>`;
+    }
+
+    const transform = flip
+      ? ` transform="translate(${esc(box.x0 + box.x1)},0) scale(-1,1)"`
+      : '';
+
+    // two-phase animation (cat <-> cow) by cross-fading a second figure
+    let second = '';
+    if (o.animate && animateWith && P[animateWith]) {
+      const alt = render(animateWith, { animate: false, showFloor: false, title: '', rawGroup: true });
+      second = `<g class="pf-phase-b">${alt}</g>`;
+      body = `<g class="pf-phase-a">${body}</g>`;
+    }
+
+    // When embedded inside another figure, return the drawing only — the parent
+    // owns the viewBox, so a nested <svg> would rescale and misalign it.
+    if (o.rawGroup) return body;
+
+    return `<svg viewBox="${VB}" class="posefig${o.animate ? ' pf-animated' : ''}" role="img" aria-label="${escapeAttr(title)}">
+
+  <defs>
+    <marker id="pf-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" class="pf-arrowhead"/>
+    </marker>
+  </defs>
+  <g${transform}>${body}${second}</g>
+</svg>`;
+  }
+
+  function escapeAttr(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function has(key) { return !!P[key]; }
+  function keys() { return Object.keys(P); }
+
+  const api = { render, has, keys, FLOOR_Y, LIMBS, _bank: P };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  global.AI4MPoses = api;
+
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* =============================================================================
+   AI4Mobility — application logic
+   -----------------------------------------------------------------------------
+   Tabs: Exercises · Session · Add your own · What's real
+   No build step, no framework, no network calls, no browser storage.
+   State lives in memory for the duration of the visit.
+   ============================================================================= */
+
+(function () {
+  'use strict';
+
+  const Splitter = window.AI4MSplitter;
+  const Poses = window.AI4MPoses;
+  const DATA = window.AI4M_DATA;
+
+  /* ------------------------------------------------------------------ state */
+
+  const state = {
+    tab: 'library',
+    programme: null,
+    stepIndex: 0,
+    running: false,
+    remaining: 0,
+    ticker: null,
+    completed: {},          // programmeId -> Set of step numbers done this visit
+    custom: null,           // last split result from the builder
+    speak: false
+  };
+
+  const $  = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  /* ------------------------------------------------------------------- tabs */
+
+  function showTab(name, opts) {
+    const focusHeading = !(opts && opts.silent);
+    state.tab = name;
+    $$('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+    $$('.panel').forEach(p => { p.hidden = p.id !== 'panel-' + name; });
+    if (focusHeading) {
+      const h = $('#panel-' + name + ' h1, #panel-' + name + ' h2');
+      if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  }
+
+  /* ---------------------------------------------------------------- library */
+
+  function isNHS(p) { return !!p.source_url && /(^|\.)nhs\.uk/.test(p.source_url); }
+
+  function difficultyDots(n) {
+    let out = '<span class="dots" aria-label="Difficulty ' + n + ' of 3">';
+    for (let i = 1; i <= 3; i++) out += '<span class="dot' + (i <= n ? ' on' : '') + '"></span>';
+    return out + '</span>';
+  }
+
+  function renderLibrary() {
+    const host = $('#library-grid');
+    host.innerHTML = DATA.programmes.map(p => {
+      const done = state.completed[p.id] ? state.completed[p.id].size : 0;
+      const total = p.steps.length;
+      return `
+      <button class="ecard" data-id="${esc(p.id)}" type="button">
+        <div class="ecard-top">
+          <div class="ecard-icon c-${esc(p.colour)}" aria-hidden="true">${p.icon}</div>
+          <div>
+            <h3>${esc(p.title)}</h3>
+            <div class="ecard-fam">${esc(p.family)}</div>
+          </div>
+        </div>
+        <p class="ecard-goal">${esc(p.why_kids_like_it)}</p>
+        <div class="ecard-meta">
+          <span class="pill">${total} step${total === 1 ? '' : 's'}</span>
+          <span class="pill">${p.duration_min} min</span>
+          ${p.source_url ? `<span class="pill src">${isNHS(p) ? 'NHS source' : 'Cited source'}</span>` : ''}
+          ${p.optional ? '<span class="pill opt">Extra</span>' : ''}
+        </div>
+        <div class="row spread">
+          ${difficultyDots(p.difficulty)}
+          <span class="small muted">${done}/${total} done</span>
+        </div>
+      </button>`;
+    }).join('');
+
+    $$('.ecard', host).forEach(btn => {
+      btn.addEventListener('click', () => openProgramme(btn.dataset.id));
+    });
+  }
+
+  /* ---------------------------------------------------------------- session */
+
+  function openProgramme(id) {
+    const p = DATA.programmes.find(x => x.id === id);
+    if (!p) return;
+    state.programme = p;
+    state.stepIndex = 0;
+    stopTimer();
+    if (!state.completed[id]) state.completed[id] = new Set();
+    renderSession();
+    showTab('session');
+  }
+
+  function currentStep() {
+    if (!state.programme) return null;
+    return state.programme.steps[state.stepIndex] || null;
+  }
+
+  function renderSession() {
+    const p = state.programme;
+    const host = $('#panel-session');
+
+    if (!p) {
+      host.innerHTML = `<div class="card empty">
+        <h2>No exercise chosen yet</h2>
+        <p>Pick one from the Exercises tab to get started.</p>
+        <button class="btn btn-primary" type="button" data-goto="library">See the exercises</button>
+      </div>`;
+      $('[data-goto]', host).addEventListener('click', () => showTab('library'));
+      return;
+    }
+
+    const step = currentStep();
+    const total = p.steps.length;
+    const doneSet = state.completed[p.id];
+    const pct = Math.round((doneSet.size / total) * 100);
+    const stars = Math.min(3, Math.floor((doneSet.size / total) * 3 + 0.0001));
+
+    host.innerHTML = `
+      <div class="row spread mb">
+        <button class="btn btn-ghost btn-sm" type="button" id="back-lib">← All exercises</button>
+        <div class="stars" role="img" aria-label="${stars} of 3 stars earned">
+          ${[1,2,3].map(i => `<span class="star${i <= stars ? ' on' : ''}">⭐</span>`).join('')}
+        </div>
+      </div>
+
+      <div class="session">
+        <div>
+          <div class="card stagewrap">
+            <div class="row spread" style="margin-bottom:6px">
+              <span class="stepline">Step ${step.n} of ${total}</span>
+              <span class="stepline">${esc(p.title)}</span>
+            </div>
+            <div id="stage">${Poses.render(step.pose, { title: step.text })}</div>
+            <p class="steptext">${esc(step.text)}</p>
+            ${step.cue ? `<p class="stepcue">${esc(step.cue)}</p>` : ''}
+
+            <div id="timerbox">${renderTimerBox(step)}</div>
+
+            <div class="controls">
+              <button class="btn" type="button" id="prev" ${state.stepIndex === 0 ? 'disabled' : ''}>← Back</button>
+              ${(step.hold_s > 0)
+                ? `<button class="btn btn-go" type="button" id="play">${state.running ? '⏸ Pause' : '▶ Start hold'}</button>`
+                : ''}
+              <button class="btn btn-primary" type="button" id="next">
+                ${state.stepIndex === total - 1 ? 'Finish ✓' : 'Done — next →'}
+              </button>
+              <button class="chip" type="button" id="say" aria-pressed="${state.speak}">🔊 Read aloud</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>📋 The original description</h2>
+            <div class="orig">
+              <h3>✏️ Exactly as it was written</h3>
+              <p>${esc(p.original_description)}</p>
+              <div class="src">
+                ${p.source_url
+                  ? `Source: <a href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(p.source_name)}</a>`
+                  : `Source: ${esc(p.source_name)}`}
+                <br>${esc(p.evidence_label)}
+              </div>
+            </div>
+            <p class="small muted mt">
+              The steps above were produced from this description by the step-splitting
+              engine and then checked by hand. Both are shown so you can compare them.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="safety">
+              <strong>⚠️ Staying safe</strong>
+              ${esc(p.safety)}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <h2>🎯 Your progress</h2>
+            <div class="bar"><i style="width:${pct}%"></i></div>
+            <p class="small muted">${doneSet.size} of ${total} steps done this visit.</p>
+            <ol class="rail">
+              ${p.steps.map((s, i) => `
+                <li class="${doneSet.has(s.n) ? 'done' : ''}${i === state.stepIndex ? ' now' : ''}">
+                  <span class="rail-n">${doneSet.has(s.n) ? '✓' : s.n}</span>
+                  <span>
+                    <span class="rail-t">${esc(s.text.length > 92 ? s.text.slice(0, 92) + '…' : s.text)}</span>
+                    ${(s.hold_s || s.reps) ? `<span class="rail-p">${s.reps ? s.reps + '×' : ''}${(s.reps && s.hold_s) ? ' · ' : ''}${s.hold_s ? formatSeconds(s.hold_s) + ' hold' : ''}</span>` : ''}
+                  </span>
+                </li>`).join('')}
+            </ol>
+            <div class="row mt">
+              <button class="btn btn-ghost btn-sm" type="button" id="reset">Start over</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>ℹ️ About this one</h2>
+            <p class="small">${esc(p.goal)}</p>
+            <p class="small muted">
+              ${esc(p.also_called ? 'Also called: ' + p.also_called : '')}
+            </p>
+          </div>
+        </div>
+      </div>`;
+
+    $('#back-lib').addEventListener('click', () => { stopTimer(); showTab('library'); });
+    $('#prev').addEventListener('click', prevStep);
+    $('#next').addEventListener('click', nextStep);
+    $('#reset').addEventListener('click', () => {
+      state.completed[p.id] = new Set();
+      state.stepIndex = 0; stopTimer(); renderSession();
+    });
+    const play = $('#play');
+    if (play) play.addEventListener('click', toggleTimer);
+    $('#say').addEventListener('click', toggleSpeech);
+
+    if (state.speak) speak(step.text + (step.cue ? '. ' + step.cue : ''));
+  }
+
+  function renderTimerBox(step) {
+    if (step.hold_s > 0) {
+      const shown = state.running || state.remaining ? state.remaining : step.hold_s;
+      return `<div class="timer${step.hold_s > 300 ? ' small' : ''}" aria-live="polite">${formatSeconds(shown)}</div>
+              <div class="timer-label">${state.running ? 'holding' : 'hold for'}${step.reps ? ' · ' + step.reps + ' times' : ''}</div>`;
+    }
+    if (step.reps) {
+      return `<div class="timer">${step.reps}×</div><div class="timer-label">repeat this many times</div>`;
+    }
+    return `<div class="timer-label">take your time</div>`;
+  }
+
+  function formatSeconds(s) {
+    s = Math.max(0, Math.round(s));
+    if (s < 60) return s + 's';
+    const m = Math.floor(s / 60), r = s % 60;
+    return r ? `${m}m ${r}s` : `${m}m`;
+  }
+
+  /* ------------------------------------------------------------------ timer */
+
+  function toggleTimer() {
+    const step = currentStep();
+    if (!step || !step.hold_s) return;
+    if (state.running) { stopTimer(); }
+    else {
+      if (!state.remaining) state.remaining = step.hold_s;
+      state.running = true;
+      state.ticker = setInterval(tick, 1000);
+    }
+    refreshTimer();
+  }
+
+  function stopTimer() {
+    state.running = false;
+    if (state.ticker) { clearInterval(state.ticker); state.ticker = null; }
+  }
+
+  function tick() {
+    state.remaining -= 1;
+    if (state.remaining <= 0) {
+      stopTimer();
+      state.remaining = 0;
+      refreshTimer();
+      if (state.speak) speak('Well done.');
+      return;
+    }
+    refreshTimer();
+  }
+
+  function refreshTimer() {
+    const step = currentStep();
+    const box = $('#timerbox');
+    if (box && step) box.innerHTML = renderTimerBox(step);
+    const play = $('#play');
+    if (play) play.textContent = state.running ? '⏸ Pause' : (state.remaining ? '▶ Resume' : '▶ Start hold');
+  }
+
+  /* -------------------------------------------------------------- stepping */
+
+  function nextStep() {
+    const p = state.programme;
+    const step = currentStep();
+    if (!p || !step) return;
+    state.completed[p.id].add(step.n);
+    stopTimer();
+    state.remaining = 0;
+    if (state.stepIndex < p.steps.length - 1) state.stepIndex += 1;
+    renderSession();
+  }
+
+  function prevStep() {
+    if (state.stepIndex > 0) state.stepIndex -= 1;
+    stopTimer(); state.remaining = 0;
+    renderSession();
+  }
+
+  /* ---------------------------------------------------------------- speech */
+
+  function toggleSpeech() {
+    state.speak = !state.speak;
+    const b = $('#say');
+    if (b) b.setAttribute('aria-pressed', String(state.speak));
+    if (state.speak) {
+      const s = currentStep();
+      if (s) speak(s.text + (s.cue ? '. ' + s.cue : ''));
+    } else if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  function speak(text) {
+    if (!window.speechSynthesis || !state.speak) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.92; u.pitch = 1.05; u.lang = 'en-GB';
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* speech is optional; never block the interface */ }
+  }
+
+  /* --------------------------------------------------------------- builder */
+
+  function renderBuilderResult(res) {
+    const host = $('#builder-out');
+    if (!res) {
+      host.innerHTML = `<div class="empty">
+        <p style="font-size:2.4rem;margin:0">✏️</p>
+        <p>Paste or type an exercise description on the left, then press
+        <strong>Split it into steps</strong>.</p></div>`;
+      return;
+    }
+    if (!res.ok) {
+      const why = res.reason === 'too_short'
+        ? 'That is too short to split. Try writing at least a full sentence.'
+        : res.reason === 'empty'
+          ? 'Nothing to split yet — the box is empty.'
+          : 'No steps could be found in that text.';
+      host.innerHTML = `<div class="warnbox"><strong>Could not split that</strong><br>${esc(why)}</div>`;
+      return;
+    }
+
+    const c = res.confidence;
+    const cls = c >= 0.7 ? 'hi' : c >= 0.5 ? 'mid' : 'lo';
+    const word = c >= 0.7 ? 'Good confidence' : c >= 0.5 ? 'Moderate confidence' : 'Low confidence';
+
+    host.innerHTML = `
+      <div class="row spread mb">
+        <h3 style="margin:0">${res.steps.length} step${res.steps.length === 1 ? '' : 's'} found</h3>
+        <span class="conf ${cls}">${word} · ${Math.round(c * 100)}%</span>
+      </div>
+
+      <ol class="rail">
+        ${res.steps.map(s => `
+          <li>
+            <span class="rail-n">${s.n}</span>
+            <span>
+              <span class="rail-t">${esc(s.text)}</span>
+              <span class="rail-p">
+                ${esc(s.kind)}${s.reps ? ' · ' + s.reps + '×' : ''}${s.hold_s ? ' · ' + formatSeconds(s.hold_s) + ' hold' : ''}
+                · ${Math.round(s.confidence * 100)}% sure
+              </span>
+            </span>
+          </li>`).join('')}
+      </ol>
+
+      ${res.safety.length ? `<div class="safety mt"><strong>⚠️ Safety lines found (kept separate from the steps)</strong>
+        ${res.safety.map(s => esc(s)).join('<br>')}</div>` : ''}
+
+      ${res.warnings && res.warnings.length ? `<div class="warnbox">
+        <strong>Worth checking</strong>
+        <ul>${res.warnings.map(w => '<li>' + esc(w) + '</li>').join('')}</ul>
+      </div>` : ''}
+
+      <div class="method">
+        Method used: <strong>${esc(res.method)}</strong>.
+        ${res.method === 'rule-based'
+          ? 'Sentence segmentation, then connective splitting, then classification — all deterministic, no language model involved.'
+          : res.method.indexOf('explicit') === 0
+            ? 'Your text was already numbered or bulleted, so that structure was kept exactly as written rather than re-split.'
+            : ''}
+      </div>`;
+  }
+
+  function runSplit() {
+    const text = $('#builder-in').value;
+    Splitter.splitExercise(text).then(res => {
+      state.custom = res;
+      renderBuilderResult(res);
+      $('#builder-out').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+  }
+
+  /* ------------------------------------------------------------- honesty */
+
+  const HONESTY = [
+    ['Exercise library with the five required programmes', 'built',
+     'Child\'s Pose, Cat–Cow, Thread the Needle, the NHS lower limb guide and the paediatric core and hip stability set are all present, with a sixth optional extra.'],
+    ['Original description shown beside the generated steps', 'built',
+     'Added directly in response to supervisor feedback. Every programme stores its source text verbatim and displays it under the steps.'],
+    ['Manual description entry', 'built',
+     'The "Add your own" tab accepts any free-text description and runs it through the same splitter.'],
+    ['Rule-based step splitting', 'built',
+     'Sentence segmentation, connective splitting, classification, and extraction of hold times and repetition counts. 24 unit tests pass.'],
+    ['LLM-based step splitting', 'not',
+     'NOT implemented. An adapter interface exists in splitter.js and returns null. Doing this properly needs a server-side API key, a proxy endpoint, schema validation of the response, and a clinical-safety review — none of which are done.'],
+    ['Stick-figure pose pictures', 'part',
+     'All 27 poses are drawn, but from hand-authored joint coordinates, not from a pose estimation model. They use the same skeleton connection list as the notebook figures.'],
+    ['Live camera pose feedback', 'not',
+     'NOT implemented in this interface. The notebook contains MediaPipe landmark extraction on recorded data. Real-time feedback on a child would need camera consent handling, on-device processing and an ethics amendment.'],
+    ['Read-aloud of the steps', 'part',
+     'Uses the browser\'s built-in speech synthesis where available. Voice quality and language coverage depend entirely on the device — nothing is bundled with the platform.'],
+    ['Progress and stars', 'part',
+     'Progress is tracked for the current visit only. Nothing is saved between visits because no storage or account system was built.'],
+    ['Accessibility controls', 'built',
+     'Large text, high contrast and calm (reduced motion) modes, keyboard navigation, visible focus, skip link and ARIA labelling throughout.'],
+    ['Accounts, saved history, therapist dashboard', 'not',
+     'NOT implemented. There is no backend, no database and no login. Everything is client-side.'],
+    ['Clinical validation with children', 'not',
+     'NOT done. No child has used this. The exercise content is adapted from published NHS sources but the platform itself has had no clinical or user evaluation.']
+  ];
+
+  function renderHonesty() {
+    const counts = { built: 0, part: 0, not: 0 };
+    HONESTY.forEach(r => counts[r[1]]++);
+    $('#honesty-counts').innerHTML = `
+      <div class="hstat"><b>${counts.built}</b><span>Built</span></div>
+      <div class="hstat"><b>${counts.part}</b><span>Partly</span></div>
+      <div class="hstat"><b>${counts.not}</b><span>Not built</span></div>`;
+
+    $('#honesty-body').innerHTML = HONESTY.map(([name, tag, detail]) => `
+      <tr>
+        <td><strong>${esc(name)}</strong></td>
+        <td><span class="tag ${tag}">${tag === 'built' ? 'Built' : tag === 'part' ? 'Partly' : 'Not built'}</span></td>
+        <td>${esc(detail)}</td>
+      </tr>`).join('');
+  }
+
+  /* ------------------------------------------------------------------ init */
+
+  function initToggles() {
+    const map = { 'toggle-text': 'big-text', 'toggle-contrast': 'high-contrast', 'toggle-calm': 'calm-mode' };
+    Object.keys(map).forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        const on = document.documentElement.classList.toggle(map[id]);
+        btn.setAttribute('aria-pressed', String(on));
+      });
+    });
+  }
+
+  function initStats() {
+    const totalSteps = DATA.programmes.reduce((a, p) => a + p.steps.length, 0);
+    const withSource = DATA.programmes.filter(isNHS).length;
+    $('#stat-progs').textContent = DATA.programmes.length;
+    $('#stat-steps').textContent = totalSteps;
+    $('#stat-src').textContent = withSource;
+  }
+
+  function init() {
+    $$('.tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+    $('#split-btn').addEventListener('click', runSplit);
+    $('#clear-btn').addEventListener('click', () => {
+      $('#builder-in').value = '';
+      state.custom = null;
+      renderBuilderResult(null);
+      $('#builder-in').focus();
+    });
+    $$('[data-sample]').forEach(b => b.addEventListener('click', () => {
+      $('#builder-in').value = b.dataset.sample;
+      runSplit();
+    }));
+
+    initToggles();
+    initStats();
+    renderLibrary();
+    renderSession();
+    renderBuilderResult(null);
+    renderHonesty();
+    showTab('library', { silent: true });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+})();
+
+</script>
+</body>
+</html>
