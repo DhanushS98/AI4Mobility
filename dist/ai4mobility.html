@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI4Mobility — guided exercise programmes</title>
-<meta name="description" content="Guided paediatric physiotherapy and mobility programmes, presented one step at a time with illustrations, timing and the original source description.">
+<meta name="description" content="Guided paediatric physiotherapy and mobility programmes with step-by-step illustrations, description-to-steps conversion and live pose feedback.">
 <style>
 /* =============================================================================
    AI4Mobility — interface styles
@@ -335,6 +335,42 @@ textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
   .card { border-color: #999; break-inside: avoid; }
 }
 
+/* ------------------------------------------------------------- pose coach */
+
+.videowrap {
+  position: relative; width: 100%; max-width: 460px; margin: 0 auto 14px;
+  aspect-ratio: 4 / 3; background: var(--page-2);
+  border: 1px solid var(--rule); border-radius: var(--r-md); overflow: hidden;
+}
+.videowrap[hidden] { display: none; }
+.videowrap video,
+.videowrap canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+}
+.videowrap video { transform: scaleX(-1); }
+
+.matchbar { display: flex; align-items: baseline; gap: 9px; margin-bottom: 10px; }
+.matchbar b { font-size: 1.7rem; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--accent); }
+.matchbar span { font-size: .78rem; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink-3); }
+
+.angles { list-style: none; padding: 0; margin: 0; }
+.angles li {
+  display: grid; grid-template-columns: 74px 108px 1fr; gap: 10px; align-items: baseline;
+  padding: 8px 10px; border-radius: var(--r-sm); font-size: .87rem;
+  border-left: 2px solid var(--rule);
+}
+.angles li + li { margin-top: 4px; }
+.angles li.ok   { border-left-color: var(--ok);     background: var(--ok-bg); }
+.angles li.near { border-left-color: var(--warn);   background: var(--warn-bg); }
+.angles li.off  { border-left-color: var(--alert);  background: var(--alert-bg); }
+.a-name { font-weight: 650; }
+.a-val  { font-variant-numeric: tabular-nums; }
+.a-hint { color: var(--ink-2); font-size: .84rem; }
+
+.rail li[data-step] { cursor: pointer; }
+.rail li[data-step]:hover { background: var(--page); }
+
 </style>
 </head>
 <body>
@@ -358,8 +394,7 @@ textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
 <div class="wrap">
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab" role="tab" data-tab="library" aria-selected="true"  type="button">Programmes</button>
-    <button class="tab" role="tab" data-tab="session" aria-selected="false" type="button">Current session</button>
-    <button class="tab" role="tab" data-tab="builder" aria-selected="false" type="button">Add a programme</button>
+    <button class="tab" role="tab" data-tab="session" aria-selected="false" type="button">Practise</button>
   </nav>
 </div>
 
@@ -371,60 +406,19 @@ textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
       <div class="eyebrow">Exercise library</div>
       <h1>Choose a programme</h1>
       <p>
-        Each programme is presented one step at a time, with an illustration,
-        the recommended repetitions and hold time, and the original description
-        it was taken from so it can be checked against the source.
+        Select a programme to load its description, or open any programme and
+        replace the text with your own. The description is separated into
+        numbered steps, each shown with an illustration and, if you turn the
+        camera on, live feedback on your position.
       </p>
     </div>
 
     <div class="filters" id="filters" role="group" aria-label="Filter by area"></div>
-
     <div class="grid" id="library-grid"></div>
   </section>
 
   <!-- ============================================================ SESSION -->
   <section class="panel" id="panel-session" role="tabpanel" hidden></section>
-
-  <!-- ============================================================ BUILDER -->
-  <section class="panel" id="panel-builder" role="tabpanel" hidden>
-    <div class="pagehead">
-      <div class="eyebrow">Custom programme</div>
-      <h1>Add your own exercise description</h1>
-      <p>
-        Enter a description from a physiotherapy leaflet, a clinic letter, or in
-        your own words. It will be separated into numbered steps, with any
-        repetitions, hold times and safety notes identified. The original text is
-        kept alongside so the two can be compared.
-      </p>
-    </div>
-
-    <div class="builder">
-      <div class="card">
-        <label class="fld" for="builder-in">Exercise description</label>
-        <p class="hint">
-          Full paragraphs are fine. Descriptions that are already numbered or
-          bulleted will keep the structure you entered.
-        </p>
-        <textarea id="builder-in" placeholder="For example: Lie on your back with your knees bent and feet flat. Squeeze your bottom and lift your hips until they line up with your knees. Hold for 5 seconds, then lower slowly. Repeat 10 times."></textarea>
-        <div class="row mt">
-          <button class="btn btn-primary" id="split-btn" type="button">Separate into steps</button>
-          <button class="btn" id="clear-btn" type="button">Clear</button>
-        </div>
-
-        <p class="small muted mt" style="margin-bottom:8px"><strong>Examples</strong></p>
-        <div class="samples">
-          <button class="btn btn-sm" type="button"
-            data-sample="Lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee. Repeat 10 times. Stop if pain becomes worse and seek advice from a healthcare professional.">Continuous prose</button>
-          <button class="btn btn-sm" type="button"
-            data-sample="1. Kneel on the floor with your knees apart.&#10;2. Sit back onto your heels.&#10;3. Fold forward and rest your tummy between your thighs.&#10;4. Hold for 20 seconds and breathe slowly.">Already numbered</button>
-          <button class="btn btn-sm" type="button"
-            data-sample="Lie on your back with legs bent and back flattened into the bed. Squeeze your bottom and roll your bottom and back off the floor. Hold for 5 seconds and then lower back down. Repeat 10 to 12 times. If you find the exercises cause you more pain please stop and seek advice from a healthcare professional.">With a safety note</button>
-        </div>
-      </div>
-
-      <div class="card" id="builder-out" aria-live="polite"></div>
-    </div>
-  </section>
 
 </main>
 
@@ -445,10 +439,10 @@ textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
       <a href="https://www.yogabasics.com/asana/threading-the-needle/" target="_blank" rel="noopener">Yoga Basics — Threading the Needle</a>.
     </p>
     <p>
-      This is a student project. It is not a medical device and is not a
-      substitute for advice from a qualified physiotherapist. Where a child has
-      been given a specific programme by a clinician, that programme should be
-      followed. Stop any exercise that causes pain and seek advice.
+      The camera runs entirely on this device. No image is uploaded, stored or
+      recorded. This is a student project, not a medical device, and not a
+      substitute for advice from a qualified physiotherapist. Stop any exercise
+      that causes pain and seek advice.
     </p>
   </div>
 </footer>
@@ -2077,10 +2071,347 @@ window.AI4M_DATA = {
 </script>
 <script>
 /* =============================================================================
+   AI4Mobility — Pose Coach
+   -----------------------------------------------------------------------------
+   Live pose estimation from the webcam using MediaPipe Pose Landmarker.
+
+   The target joint angles are derived from the SAME hand-authored pose bank the
+   stick figures are drawn from (poses.js), so the reference the coach compares
+   against is exactly the reference the illustration shows.
+
+   Everything runs on the device. No frame is uploaded anywhere and no recording
+   is made — the video element is the only place the image exists.
+
+   Degrades cleanly: if the model cannot be fetched, or the browser has no
+   camera, or permission is refused, the coach reports that plainly and the rest
+   of the interface continues to work.
+   ============================================================================= */
+
+(function (global) {
+  'use strict';
+
+  const Poses = global.AI4MPoses;
+
+  // MediaPipe Pose Landmarker indices we use.
+  const L = {
+    nose: 0,
+    shoulderL: 11, shoulderR: 12,
+    elbowL: 13, elbowR: 14,
+    wristL: 15, wristR: 16,
+    hipL: 23, hipR: 24,
+    kneeL: 25, kneeR: 26,
+    ankleL: 27, ankleR: 28
+  };
+
+  const MODEL_URL =
+    'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+  const VISION_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+
+  // Bones to draw on the overlay.
+  const DRAW_PAIRS = [
+    [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
+    [11, 23], [12, 24], [23, 24],
+    [23, 25], [25, 27], [24, 26], [26, 28]
+  ];
+
+  /* ------------------------------------------------------- angle utilities */
+
+  function angleAt(a, v, b) {
+    if (!a || !v || !b) return null;
+    const v1x = a.x - v.x, v1y = a.y - v.y;
+    const v2x = b.x - v.x, v2y = b.y - v.y;
+    const n1 = Math.hypot(v1x, v1y), n2 = Math.hypot(v2x, v2y);
+    if (n1 < 1e-6 || n2 < 1e-6) return null;
+    let c = (v1x * v2x + v1y * v2y) / (n1 * n2);
+    c = Math.max(-1, Math.min(1, c));
+    return Math.acos(c) * 180 / Math.PI;
+  }
+
+  function mid(p, q) {
+    return (p && q) ? { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 } : null;
+  }
+
+  /* --------------------------------------- target angles from the pose bank */
+
+  // Joints the coach checks, described in terms of the pose-bank joint names.
+  const CHECKS = [
+    { key: 'elbow', label: 'Elbow',  triple: ['sho', 'elb', 'wri'],  tol: 22 },
+    { key: 'knee',  label: 'Knee',   triple: ['hip', 'kne', 'ank'],  tol: 20 },
+    { key: 'hip',   label: 'Hip',    triple: ['sho', 'hip', 'kne'],  tol: 22 },
+    { key: 'trunk', label: 'Trunk',  triple: ['head', 'sho', 'hip'], tol: 24 }
+  ];
+
+  const _targetCache = {};
+
+  function targetAngles(poseKey) {
+    if (_targetCache[poseKey]) return _targetCache[poseKey];
+    const bank = Poses && Poses._bank ? Poses._bank[poseKey] : null;
+    let pose = bank;
+    // follow aliases (e.g. flow -> cow)
+    let guard = 0;
+    while (pose && pose.alias && guard++ < 4) pose = Poses._bank[pose.alias];
+    if (!pose || !pose.j) return (_targetCache[poseKey] = null);
+
+    const j = pose.j;
+    const pt = name => (j[name] ? { x: j[name][0], y: j[name][1] } : null);
+
+    const out = {};
+    CHECKS.forEach(c => {
+      const a = pt(c.triple[0]), v = pt(c.triple[1]), b = pt(c.triple[2]);
+      const ang = angleAt(a, v, b);
+      if (ang != null) out[c.key] = ang;
+    });
+    return (_targetCache[poseKey] = out);
+  }
+
+  /* -------------------------------------- measured angles from the landmarks */
+
+  function measuredAngles(lm) {
+    const g = i => (lm[i] && (lm[i].visibility == null || lm[i].visibility > 0.4)) ? lm[i] : null;
+
+    const shoulder = mid(g(L.shoulderL), g(L.shoulderR));
+    const hip = mid(g(L.hipL), g(L.hipR));
+    const knee = mid(g(L.kneeL), g(L.kneeR));
+    const ankle = mid(g(L.ankleL), g(L.ankleR));
+    const elbow = g(L.elbowL) || g(L.elbowR);
+    const wrist = g(L.wristL) || g(L.wristR);
+    const head = g(L.nose);
+
+    const out = {};
+    const e = angleAt(shoulder, elbow, wrist);
+    if (e != null) out.elbow = e;
+    const k = angleAt(hip, knee, ankle);
+    if (k != null) out.knee = k;
+    const h = angleAt(shoulder, hip, knee);
+    if (h != null) out.hip = h;
+    const t = angleAt(head, shoulder, hip);
+    if (t != null) out.trunk = t;
+
+    // A crude but useful signal: how much of the body is actually visible.
+    const seen = [L.shoulderL, L.shoulderR, L.hipL, L.hipR, L.kneeL, L.kneeR]
+      .filter(i => g(i)).length;
+    out._coverage = seen / 6;
+    return out;
+  }
+
+  /* ----------------------------------------------------------- the feedback */
+
+  function compare(poseKey, measured) {
+    const target = targetAngles(poseKey);
+    if (!target || !measured) return { ready: false, items: [], score: null };
+
+    const items = [];
+    CHECKS.forEach(c => {
+      if (target[c.key] == null || measured[c.key] == null) return;
+      const diff = measured[c.key] - target[c.key];
+      const off = Math.abs(diff);
+      items.push({
+        key: c.key,
+        label: c.label,
+        target: Math.round(target[c.key]),
+        measured: Math.round(measured[c.key]),
+        diff: Math.round(diff),
+        ok: off <= c.tol,
+        near: off > c.tol && off <= c.tol * 1.8,
+        hint: off <= c.tol
+          ? 'Good'
+          : (diff > 0 ? 'Try bending a little more' : 'Try straightening a little more')
+      });
+    });
+
+    const matched = items.filter(i => i.ok).length;
+    const score = items.length ? Math.round((matched / items.length) * 100) : null;
+    return { ready: items.length > 0, items, score };
+  }
+
+  /* --------------------------------------------------------------- runtime */
+
+  const coach = {
+    supported: typeof navigator !== 'undefined' &&
+               !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+    running: false,
+    landmarker: null,
+    stream: null,
+    raf: null,
+    video: null,
+    canvas: null,
+    onUpdate: null,
+    poseKey: null,
+    status: 'idle',
+    message: ''
+  };
+
+  function setStatus(status, message) {
+    coach.status = status;
+    coach.message = message || '';
+    if (coach.onUpdate) coach.onUpdate({ status, message, result: null });
+  }
+
+  async function loadLandmarker() {
+    if (coach.landmarker) return coach.landmarker;
+    setStatus('loading', 'Loading the pose model…');
+    const vision = await import(/* webpackIgnore: true */ VISION_CDN + '/vision_bundle.mjs');
+    const fileset = await vision.FilesetResolver.forVisionTasks(VISION_CDN + '/wasm');
+    coach.landmarker = await vision.PoseLandmarker.createFromOptions(fileset, {
+      baseOptions: { modelAssetPath: MODEL_URL, delegate: 'GPU' },
+      runningMode: 'VIDEO',
+      numPoses: 1
+    });
+    return coach.landmarker;
+  }
+
+  async function start(videoEl, canvasEl, poseKey, onUpdate) {
+    coach.video = videoEl;
+    coach.canvas = canvasEl;
+    coach.poseKey = poseKey;
+    coach.onUpdate = onUpdate;
+
+    if (!coach.supported) {
+      setStatus('unsupported', 'This browser cannot open a camera.');
+      return false;
+    }
+
+    try {
+      await loadLandmarker();
+    } catch (err) {
+      setStatus('error', 'The pose model could not be loaded. An internet connection is needed the first time.');
+      return false;
+    }
+
+    try {
+      setStatus('loading', 'Waiting for camera permission…');
+      coach.stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+        audio: false
+      });
+    } catch (err) {
+      setStatus('denied', 'Camera permission was not given, so the coach cannot run.');
+      return false;
+    }
+
+    videoEl.srcObject = coach.stream;
+    await videoEl.play();
+
+    coach.running = true;
+    setStatus('running', '');
+    loop();
+    return true;
+  }
+
+  function stop() {
+    coach.running = false;
+    if (coach.raf) { cancelAnimationFrame(coach.raf); coach.raf = null; }
+    if (coach.stream) {
+      coach.stream.getTracks().forEach(t => t.stop());
+      coach.stream = null;
+    }
+    if (coach.video) coach.video.srcObject = null;
+    setStatus('idle', '');
+  }
+
+  function setPose(poseKey) { coach.poseKey = poseKey; }
+
+  let lastTs = -1;
+
+  function loop() {
+    if (!coach.running) return;
+    const v = coach.video, c = coach.canvas;
+
+    if (v && v.readyState >= 2 && coach.landmarker) {
+      const ts = performance.now();
+      if (ts !== lastTs) {
+        lastTs = ts;
+        let res = null;
+        try {
+          res = coach.landmarker.detectForVideo(v, ts);
+        } catch (e) { /* a dropped frame must not kill the loop */ }
+
+        if (c) {
+          const ctx = c.getContext('2d');
+          c.width = v.videoWidth || 640;
+          c.height = v.videoHeight || 480;
+          ctx.clearRect(0, 0, c.width, c.height);
+
+          if (res && res.landmarks && res.landmarks.length) {
+            drawSkeleton(ctx, res.landmarks[0], c.width, c.height);
+            const measured = measuredAngles(res.landmarks[0]);
+            const comparison = compare(coach.poseKey, measured);
+            if (coach.onUpdate) {
+              coach.onUpdate({
+                status: 'running',
+                message: measured._coverage < 0.7
+                  ? 'Step back so more of the body is in view.'
+                  : '',
+                result: comparison
+              });
+            }
+          } else if (coach.onUpdate) {
+            coach.onUpdate({ status: 'running', message: 'No person detected yet.', result: null });
+          }
+        }
+      }
+    }
+    coach.raf = requestAnimationFrame(loop);
+  }
+
+  function drawSkeleton(ctx, lm, w, h) {
+    ctx.save();
+    // Mirror, so the picture behaves like a mirror rather than a video of you.
+    ctx.translate(w, 0);
+    ctx.scale(-1, 1);
+
+    ctx.lineWidth = Math.max(3, w / 160);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#1f6f8b';
+    DRAW_PAIRS.forEach(([a, b]) => {
+      const p = lm[a], q = lm[b];
+      if (!p || !q) return;
+      if ((p.visibility != null && p.visibility < 0.4) ||
+          (q.visibility != null && q.visibility < 0.4)) return;
+      ctx.beginPath();
+      ctx.moveTo(p.x * w, p.y * h);
+      ctx.lineTo(q.x * w, q.y * h);
+      ctx.stroke();
+    });
+
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#16202b';
+    ctx.lineWidth = Math.max(2, w / 300);
+    Object.values(L).forEach(i => {
+      const p = lm[i];
+      if (!p || (p.visibility != null && p.visibility < 0.4)) return;
+      ctx.beginPath();
+      ctx.arc(p.x * w, p.y * h, Math.max(3.5, w / 130), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  const api = {
+    start, stop, setPose, compare, measuredAngles, targetAngles,
+    get running() { return coach.running; },
+    get supported() { return coach.supported; },
+    get status() { return coach.status; }
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  global.AI4MCoach = api;
+
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* =============================================================================
    AI4Mobility — application logic
-   Tabs: Programmes · Current session · Add a programme
-   No framework, no network requests, no browser storage. Session state is held
-   in memory for the duration of the visit.
+
+   Two views:
+     Programmes — the exercise library
+     Practise   — an editable description box that drives a step list, an
+                  illustrated step-by-step view, and the live pose coach
+
+   No framework, no network requests other than the optional pose model, and no
+   browser storage. Session state is held in memory for the visit.
    ============================================================================= */
 
 (function () {
@@ -2088,6 +2419,7 @@ window.AI4M_DATA = {
 
   const Splitter = window.AI4MSplitter;
   const Poses = window.AI4MPoses;
+  const Coach = window.AI4MCoach;
   const DATA = window.AI4M_DATA;
 
   /* ------------------------------------------------------------------ state */
@@ -2095,13 +2427,17 @@ window.AI4M_DATA = {
   const state = {
     tab: 'library',
     filter: 'All',
-    programme: null,
+    programme: null,     // the loaded programme, or null for a custom description
+    steps: [],           // the step list currently being practised
     stepIndex: 0,
+    edited: false,       // true once the description no longer matches the source
     running: false,
     remaining: 0,
     ticker: null,
-    completed: {},
-    speak: false
+    done: new Set(),
+    speak: false,
+    coachOn: false,
+    coachState: null
   };
 
   const $  = (sel, root) => (root || document).querySelector(sel);
@@ -2120,12 +2456,20 @@ window.AI4M_DATA = {
     return r ? m + 'm ' + r + 's' : m + 'm';
   }
 
+  function doseLine(s) {
+    const bits = [];
+    if (s.reps) bits.push(s.reps + ' repetitions');
+    if (s.hold_s) bits.push(formatSeconds(s.hold_s) + ' hold');
+    return bits.join(' · ');
+  }
+
   /* ------------------------------------------------------------------- tabs */
 
   function showTab(name, opts) {
     state.tab = name;
     $$('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
     $$('.panel').forEach(p => { p.hidden = p.id !== 'panel-' + name; });
+    if (name !== 'session') stopCoach();
     if (!(opts && opts.silent)) {
       const h = $('#panel-' + name + ' h1, #panel-' + name + ' h2');
       if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
@@ -2163,59 +2507,156 @@ window.AI4M_DATA = {
     const host = $('#library-grid');
     const list = DATA.programmes.filter(p => state.filter === 'All' || p.family === state.filter);
 
-    host.innerHTML = list.map(p => {
-      const done = state.completed[p.id] ? state.completed[p.id].size : 0;
-      const total = p.steps.length;
-      const preview = Poses.render(p.steps[0].pose, { animate: false, title: '' });
-      return `
+    host.innerHTML = list.map(p => `
       <button class="ecard" data-id="${esc(p.id)}" type="button">
-        <div class="ecard-fig" aria-hidden="true">${preview}</div>
+        <div class="ecard-fig" aria-hidden="true">${Poses.render(p.steps[0].pose, { animate: false, title: '' })}</div>
         <div>
           <h3>${esc(p.title)}</h3>
           <div class="ecard-sub">${esc(p.subtitle)}</div>
         </div>
         <p class="ecard-goal">${esc(p.goal)}</p>
         <div class="ecard-meta">
-          <span class="pill">${total} step${total === 1 ? '' : 's'}</span>
+          <span class="pill">${p.steps.length} steps</span>
           <span class="pill">${p.duration_min} min</span>
           <span class="pill">${esc(p.position)}</span>
           ${p.source_url ? '<span class="pill src">Referenced</span>' : ''}
         </div>
         <div class="row spread">
           ${levelBars(p.difficulty)}
-          <span class="small muted">${done ? done + ' of ' + total + ' complete' : ''}</span>
         </div>
-      </button>`;
-    }).join('');
+      </button>`).join('');
 
-    $$('.ecard', host).forEach(b => b.addEventListener('click', () => openProgramme(b.dataset.id)));
+    $$('.ecard', host).forEach(b => b.addEventListener('click', () => loadProgramme(b.dataset.id)));
+  }
+
+  /* --------------------------------------------------------------- loading */
+
+  function loadProgramme(id) {
+    const p = DATA.programmes.find(x => x.id === id);
+    if (!p) return;
+    state.programme = p;
+    state.steps = p.steps.map(s => Object.assign({}, s));
+    state.stepIndex = 0;
+    state.edited = false;
+    state.done = new Set();
+    state.remaining = 0;
+    stopTimer();
+    renderSession();
+    showTab('session');
+    const box = $('#desc-in');
+    if (box) box.value = p.original_description;
+  }
+
+  /**
+   * Convert whatever is in the description box into the practised step list.
+   * This is the same conversion whether the text came from a programme or was
+   * typed by hand.
+   */
+  function convertDescription() {
+    const text = $('#desc-in').value;
+    Splitter.splitExercise(text).then(res => {
+      if (!res.ok) {
+        state.convertError = res.reason === 'too_short'
+          ? 'The description is too short to separate. Please enter at least a full sentence.'
+          : res.reason === 'empty'
+            ? 'Enter a description first.'
+            : 'No steps could be identified in that description.';
+        renderSession();
+        return;
+      }
+      state.convertError = null;
+      state.convertWarnings = res.warnings || [];
+      state.convertSafety = res.safety || [];
+
+      // Keep the illustration where the wording still matches the source step.
+      const source = state.programme ? state.programme.steps : [];
+      state.steps = res.steps.map((s, i) => {
+        // Only carry the programme's title and illustration across when the
+        // wording is genuinely unchanged. Otherwise the picture would describe
+        // a movement the edited text no longer asks for.
+        const match = source[i];
+        const unchanged = match && normalise(match.text) === normalise(s.text);
+        return {
+          n: s.n,
+          title: unchanged ? match.title : null,
+          text: s.text,
+          hold_s: s.hold_s,
+          reps: s.reps,
+          pose: unchanged ? match.pose : guessPose(s.text)
+        };
+      });
+      state.edited = !state.programme ||
+        normalise(text) !== normalise(state.programme.original_description);
+      state.stepIndex = 0;
+      state.done = new Set();
+      state.remaining = 0;
+      stopTimer();
+      renderSession();
+    });
+  }
+
+  function normalise(s) {
+    return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  /** Pick a plausible illustration for a step written by hand. */
+  const POSE_HINTS = [
+    [/\bhands? and knees|four ?point|table\b/, 'table'],
+    [/\bround your back|arch.*ceiling|cat\b/, 'cat'],
+    [/\bdrop your tummy|cow\b/, 'cow'],
+    [/\bkneel/, 'kneel'],
+    [/\bsit back|onto your heels/, 'sit_heels'],
+    [/\bfold forward/, 'fold'],
+    [/\bbridge|lift your hips|raising your bottom/, 'bridge'],
+    [/\bclam|top knee/, 'clam'],
+    [/\bon your side\b/, 'clam'],
+    [/\bon your (tummy|front)|prone|stomach/, 'prone'],
+    [/\bdead bug/, 'dead_bug'],
+    [/\bhip.*(out to the side|abduct)/, 'hip_abduct'],
+    [/\bheel towards your bottom|bend your knee/, 'knee_bend'],
+    [/\bsqueeze your bottom|glute/, 'supine_glute'],
+    [/\bpush your knee down|quadriceps/, 'supine_quad'],
+    [/\bpoint your foot|toes up towards|ankle/, 'supine_ankle'],
+    [/\btip ?toes|heel raise|onto your toes/, 'heel_raise'],
+    [/\bone leg|single leg|balanc/, 'one_leg'],
+    [/\bheel to toe|tandem/, 'tandem_stand'],
+    [/\bsquat|sit on the chair/, 'chair_squat'],
+    [/\bstep up|onto the step/, 'step_up'],
+    [/\bwall\b/, 'wall_push'],
+    [/\bprayer/, 'prayer_stretch'],
+    [/\bwrist/, 'wrist_table'],
+    [/\belbow into your side|palm to face/, 'forearm_twist'],
+    [/\bshoulder.*(roll|circle)/, 'shoulder_roll'],
+    [/\breach.*above your head|overhead/, 'seated_reach'],
+    [/\bneck\b/, 'neck_stretch'],
+    [/\bturn your shoulders|look behind/, 'seated_twist'],
+    [/\bsit tall|sitting/, 'seated'],
+    [/\breach the .*hand up|towards the ceiling/, 'thread_reach'],
+    [/\bslide the .*hand between|thread/, 'thread'],
+    [/\bstand/, 'stand']
+  ];
+
+  function guessPose(text) {
+    const low = String(text || '').toLowerCase();
+    for (const [re, key] of POSE_HINTS) {
+      if (re.test(low) && Poses.has(key)) return key;
+    }
+    return 'stand';
   }
 
   /* ---------------------------------------------------------------- session */
 
-  function openProgramme(id) {
-    const p = DATA.programmes.find(x => x.id === id);
-    if (!p) return;
-    state.programme = p;
-    state.stepIndex = 0;
-    state.remaining = 0;
-    stopTimer();
-    if (!state.completed[id]) state.completed[id] = new Set();
-    renderSession();
-    showTab('session');
-  }
-
   function currentStep() {
-    return state.programme ? (state.programme.steps[state.stepIndex] || null) : null;
+    return state.steps[state.stepIndex] || null;
   }
 
   function renderSession() {
-    const p = state.programme;
     const host = $('#panel-session');
+    const p = state.programme;
 
-    if (!p) {
+    if (!state.steps.length && !p) {
       host.innerHTML = `<div class="card empty">
-        <p>No programme selected.</p>
+        <p>No programme loaded.</p>
         <p><button class="btn btn-primary" type="button" data-goto>Browse the programmes</button></p>
       </div>`;
       $('[data-goto]', host).addEventListener('click', () => showTab('library'));
@@ -2223,74 +2664,101 @@ window.AI4M_DATA = {
     }
 
     const step = currentStep();
-    const total = p.steps.length;
-    const doneSet = state.completed[p.id];
-    const pct = Math.round((doneSet.size / total) * 100);
+    const total = state.steps.length;
+    const pct = total ? Math.round((state.done.size / total) * 100) : 0;
 
     host.innerHTML = `
-      <div class="row spread" style="margin-bottom:18px">
+      <div class="row spread" style="margin-bottom:16px">
         <button class="btn btn-sm" type="button" id="back-lib">All programmes</button>
-        <span class="small muted">${esc(p.title)} · ${doneSet.size} of ${total} complete</span>
+        <span class="small muted">
+          ${p ? esc(p.title) : 'Custom description'}${state.edited ? ' · edited' : ''}
+        </span>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <h2>Exercise description</h2>
+        <p class="hint">
+          Edit this text, or paste in a description of your own. Selecting
+          <strong>Convert to steps</strong> rebuilds the step list below from
+          whatever is written here.
+        </p>
+        <textarea id="desc-in" rows="5"></textarea>
+        <div class="row mt">
+          <button class="btn btn-primary" type="button" id="convert">Convert to steps</button>
+          ${p ? '<button class="btn" type="button" id="restore">Restore original</button>' : ''}
+          <button class="btn" type="button" id="clear-desc">Clear</button>
+          ${p && p.source_url
+            ? `<span class="small muted">Source: <a href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(p.source_name)}</a></span>`
+            : (p ? `<span class="small muted">Source: ${esc(p.source_name)}</span>` : '')}
+        </div>
+        ${state.convertError ? `<div class="notice mt"><strong>Unable to separate</strong>${esc(state.convertError)}</div>` : ''}
+        ${(state.convertWarnings && state.convertWarnings.length)
+          ? `<div class="notice mt"><strong>Please review</strong>${state.convertWarnings.map(esc).join('<br>')}</div>` : ''}
+        ${(state.convertSafety && state.convertSafety.length)
+          ? `<div class="notice alert mt"><strong>Safety notes found in the description</strong>${state.convertSafety.map(esc).join('<br>')}</div>` : ''}
       </div>
 
       <div class="session">
         <div>
           <div class="card stagewrap">
             <div class="stagehead">
-              <span>Step ${step.n} of ${total}</span>
-              <span>${esc(p.family)}</span>
+              <span>Step ${step ? step.n : 0} of ${total}</span>
+              <span>${p ? esc(p.family) : 'Custom'}</span>
             </div>
 
-            ${Poses.render(step.pose, { title: step.title || step.text })}
+            ${step ? Poses.render(step.pose, { title: step.title || step.text }) : ''}
 
-            <p class="steptitle">${esc(step.title || ('Step ' + step.n))}</p>
-            <p class="steptext">${esc(step.text)}</p>
+            ${step && step.title ? `<p class="steptitle">${esc(step.title)}</p>` : ''}
+            <p class="steptext">${step ? esc(step.text) : 'No steps yet.'}</p>
 
-            <div class="dose${state.running ? ' running' : ''}" id="dosebox">${renderDose(step)}</div>
+            <div class="dose${state.running ? ' running' : ''}" id="dosebox">${step ? renderDose(step) : ''}</div>
 
             <div class="controls">
               <button class="btn" type="button" id="prev" ${state.stepIndex === 0 ? 'disabled' : ''}>Previous</button>
-              ${step.hold_s > 0
+              ${step && step.hold_s > 0
                 ? `<button class="btn" type="button" id="play">${state.running ? 'Pause' : (state.remaining ? 'Resume' : 'Start timer')}</button>`
                 : ''}
-              <button class="btn btn-primary" type="button" id="next">
-                ${state.stepIndex === total - 1 ? 'Complete programme' : 'Next step'}
+              <button class="btn btn-primary" type="button" id="next" ${total ? '' : 'disabled'}>
+                ${state.stepIndex === total - 1 ? 'Finish' : 'Next step'}
               </button>
               <button class="chip" type="button" id="say" aria-pressed="${state.speak}">Read aloud</button>
             </div>
           </div>
 
           <div class="card">
-            <h2>Original description</h2>
-            <div class="orig">
-              <p>${esc(p.original_description)}</p>
-              <div class="src">
-                ${p.source_url
-                  ? `Source: <a href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(p.source_name)}</a>`
-                  : `Source: ${esc(p.source_name)}`}
+            <h2>Pose feedback</h2>
+            <div class="coach">
+              <div class="videowrap" id="videowrap" ${state.coachOn ? '' : 'hidden'}>
+                <video id="coach-video" playsinline muted></video>
+                <canvas id="coach-canvas"></canvas>
+              </div>
+              <div id="coach-panel">${renderCoachPanel()}</div>
+              <div class="row mt">
+                <button class="btn ${state.coachOn ? '' : 'btn-primary'}" type="button" id="coach-toggle">
+                  ${state.coachOn ? 'Turn camera off' : 'Turn camera on'}
+                </button>
+                <span class="small muted">Runs on this device. Nothing is uploaded or recorded.</span>
               </div>
             </div>
           </div>
 
-          <div class="card">
-            <div class="notice alert">
-              <strong>Safety</strong>
-              ${esc(p.safety)}
-            </div>
-          </div>
+          ${p ? `<div class="card">
+            <div class="notice alert"><strong>Safety</strong>${esc(p.safety)}</div>
+          </div>` : ''}
         </div>
 
         <div>
           <div class="card">
-            <h2>Programme steps</h2>
+            <h2>Steps</h2>
             <div class="bar"><i style="width:${pct}%"></i></div>
             <ol class="rail">
-              ${p.steps.map((s, i) => `
-                <li class="${doneSet.has(s.n) ? 'done' : ''}${i === state.stepIndex ? ' now' : ''}">
-                  <span class="rail-n">${doneSet.has(s.n) ? '&check;' : s.n}</span>
+              ${state.steps.map((s, i) => `
+                <li class="${state.done.has(s.n) ? 'done' : ''}${i === state.stepIndex ? ' now' : ''}" data-step="${i}">
+                  <span class="rail-n">${state.done.has(s.n) ? '&check;' : s.n}</span>
                   <span>
-                    <span class="rail-t">${esc(s.title || s.text.slice(0, 58))}</span>
-                    <span class="rail-p">${doseLine(s) || '&nbsp;'}</span>
+                    <span class="rail-t">${esc(s.title || s.text)}</span>
+                    ${s.title ? `<span class="rail-p">${esc(s.text.length > 74 ? s.text.slice(0, 74) + '…' : s.text)}</span>` : ''}
+                    ${doseLine(s) ? `<span class="rail-p"><strong>${doseLine(s)}</strong></span>` : ''}
                   </span>
                 </li>`).join('')}
             </ol>
@@ -2299,50 +2767,142 @@ window.AI4M_DATA = {
             </div>
           </div>
 
-          <div class="card">
+          ${p ? `<div class="card">
             <h2>About this programme</h2>
             <p class="small">${esc(p.goal)}</p>
             <p class="small muted" style="margin-top:10px">
               Position: ${esc(p.position)} &middot; Approx. ${p.duration_min} minutes
             </p>
-          </div>
+          </div>` : ''}
         </div>
       </div>`;
 
-    $('#back-lib').addEventListener('click', () => { stopTimer(); showTab('library'); });
+    // restore the description text after the re-render
+    const box = $('#desc-in');
+    if (box) box.value = state.descText != null
+      ? state.descText
+      : (p ? p.original_description : '');
+    if (box) box.addEventListener('input', () => { state.descText = box.value; });
+
+    $('#back-lib').addEventListener('click', () => { stopCoach(); stopTimer(); showTab('library'); });
+    $('#convert').addEventListener('click', convertDescription);
+    $('#clear-desc').addEventListener('click', () => {
+      state.descText = '';
+      $('#desc-in').value = '';
+      $('#desc-in').focus();
+    });
+    const restore = $('#restore');
+    if (restore) restore.addEventListener('click', () => {
+      state.descText = p.original_description;
+      state.steps = p.steps.map(s => Object.assign({}, s));
+      state.edited = false;
+      state.stepIndex = 0;
+      state.done = new Set();
+      state.convertError = state.convertWarnings = state.convertSafety = null;
+      stopTimer();
+      renderSession();
+    });
+
     $('#prev').addEventListener('click', prevStep);
     $('#next').addEventListener('click', nextStep);
     $('#reset').addEventListener('click', () => {
-      state.completed[p.id] = new Set();
-      state.stepIndex = 0; state.remaining = 0; stopTimer(); renderSession();
+      state.done = new Set(); state.stepIndex = 0; state.remaining = 0;
+      stopTimer(); renderSession();
     });
     const play = $('#play');
     if (play) play.addEventListener('click', toggleTimer);
     $('#say').addEventListener('click', toggleSpeech);
+    $('#coach-toggle').addEventListener('click', toggleCoach);
 
-    if (state.speak) speak((step.title ? step.title + '. ' : '') + step.text);
-  }
+    $$('[data-step]').forEach(li => li.addEventListener('click', () => {
+      state.stepIndex = parseInt(li.dataset.step, 10);
+      state.remaining = 0; stopTimer(); renderSession();
+    }));
 
-  function doseLine(s) {
-    const bits = [];
-    if (s.reps) bits.push(s.reps + ' repetitions');
-    if (s.hold_s) bits.push(formatSeconds(s.hold_s) + ' hold');
-    return bits.join(' · ');
+    if (state.coachOn && Coach.running && step) Coach.setPose(step.pose);
+    if (state.speak && step) speak((step.title ? step.title + '. ' : '') + step.text);
   }
 
   function renderDose(step) {
     const cells = [];
-    if (step.reps) {
-      cells.push(`<div><b>${step.reps}</b><span>Repetitions</span></div>`);
-    }
+    if (step.reps) cells.push(`<div><b>${step.reps}</b><span>Repetitions</span></div>`);
     if (step.hold_s > 0) {
       const shown = (state.running || state.remaining) ? state.remaining : step.hold_s;
       cells.push(`<div aria-live="polite"><b>${formatSeconds(shown)}</b><span>${state.running ? 'Remaining' : 'Hold'}</span></div>`);
     }
-    if (!cells.length) {
-      cells.push('<div><b>&mdash;</b><span>No set count</span></div>');
-    }
+    if (!cells.length) cells.push('<div><b>&mdash;</b><span>No set count</span></div>');
     return cells.join('');
+  }
+
+  /* ------------------------------------------------------------ pose coach */
+
+  function renderCoachPanel() {
+    if (!state.coachOn) {
+      return `<p class="small muted">
+        Turning the camera on shows your position beside the illustration and
+        compares the main joint angles with the target for the current step.
+      </p>`;
+    }
+
+    const cs = state.coachState;
+    if (!cs) return '<p class="small muted">Starting…</p>';
+
+    if (cs.status && cs.status !== 'running') {
+      return `<div class="notice"><strong>Camera</strong>${esc(cs.message || 'Not available.')}</div>`;
+    }
+
+    const res = cs.result;
+    if (!res || !res.ready) {
+      return `<p class="small muted">${esc(cs.message || 'Looking for a person in view…')}</p>`;
+    }
+
+    return `
+      <div class="matchbar">
+        <b>${res.score}%</b>
+        <span>joints within range</span>
+      </div>
+      ${cs.message ? `<p class="small muted">${esc(cs.message)}</p>` : ''}
+      <ul class="angles">
+        ${res.items.map(i => `
+          <li class="${i.ok ? 'ok' : (i.near ? 'near' : 'off')}">
+            <span class="a-name">${esc(i.label)}</span>
+            <span class="a-val">${i.measured}° <span class="muted">/ ${i.target}°</span></span>
+            <span class="a-hint">${esc(i.hint)}</span>
+          </li>`).join('')}
+      </ul>
+      <p class="small muted" style="margin-top:10px">
+        Angles are compared with the illustrated position and are a guide only.
+      </p>`;
+  }
+
+  function refreshCoachPanel() {
+    const el = $('#coach-panel');
+    if (el) el.innerHTML = renderCoachPanel();
+  }
+
+  function toggleCoach() {
+    if (state.coachOn) { stopCoach(); renderSession(); return; }
+    state.coachOn = true;
+    state.coachState = { status: 'loading', message: 'Starting…', result: null };
+    renderSession();
+
+    const step = currentStep();
+    Coach.start($('#coach-video'), $('#coach-canvas'), step ? step.pose : 'stand', update => {
+      state.coachState = update;
+      refreshCoachPanel();
+    }).then(ok => {
+      if (!ok) {
+        const wrap = $('#videowrap');
+        if (wrap) wrap.hidden = true;
+      }
+    });
+  }
+
+  function stopCoach() {
+    if (!state.coachOn) return;
+    state.coachOn = false;
+    state.coachState = null;
+    try { Coach.stop(); } catch (e) { /* nothing to stop */ }
   }
 
   /* ------------------------------------------------------------------ timer */
@@ -2350,9 +2910,8 @@ window.AI4M_DATA = {
   function toggleTimer() {
     const step = currentStep();
     if (!step || !step.hold_s) return;
-    if (state.running) {
-      stopTimer();
-    } else {
+    if (state.running) stopTimer();
+    else {
       if (!state.remaining) state.remaining = step.hold_s;
       state.running = true;
       state.ticker = setInterval(tick, 1000);
@@ -2378,8 +2937,7 @@ window.AI4M_DATA = {
   }
 
   function refreshDose() {
-    const step = currentStep();
-    const box = $('#dosebox');
+    const step = currentStep(), box = $('#dosebox');
     if (box && step) {
       box.innerHTML = renderDose(step);
       box.className = 'dose' + (state.running ? ' running' : '');
@@ -2391,12 +2949,12 @@ window.AI4M_DATA = {
   /* -------------------------------------------------------------- stepping */
 
   function nextStep() {
-    const p = state.programme, step = currentStep();
-    if (!p || !step) return;
-    state.completed[p.id].add(step.n);
+    const step = currentStep();
+    if (!step) return;
+    state.done.add(step.n);
     stopTimer();
     state.remaining = 0;
-    if (state.stepIndex < p.steps.length - 1) state.stepIndex += 1;
+    if (state.stepIndex < state.steps.length - 1) state.stepIndex += 1;
     renderSession();
   }
 
@@ -2431,51 +2989,6 @@ window.AI4M_DATA = {
     } catch (e) { /* speech is optional and must never block the interface */ }
   }
 
-  /* --------------------------------------------------------------- builder */
-
-  function renderBuilderResult(res) {
-    const host = $('#builder-out');
-
-    if (!res) {
-      host.innerHTML = '<div class="empty">Enter a description on the left, then select ' +
-                       '<strong>Separate into steps</strong>.</div>';
-      return;
-    }
-
-    if (!res.ok) {
-      const why = res.reason === 'too_short'
-        ? 'The description is too short to separate. Please enter at least a full sentence.'
-        : res.reason === 'empty'
-          ? 'Nothing has been entered yet.'
-          : 'No steps could be identified in that description.';
-      host.innerHTML = `<div class="notice"><strong>Unable to separate</strong>${esc(why)}</div>`;
-      return;
-    }
-
-    host.innerHTML = `
-      <h2>${res.steps.length} step${res.steps.length === 1 ? '' : 's'}</h2>
-      <ol class="rail">
-        ${res.steps.map(s => `
-          <li>
-            <span class="rail-n">${s.n}</span>
-            <span>
-              <span class="rail-t">${esc(s.text)}</span>
-              ${doseLine(s) ? `<span class="rail-p">${doseLine(s)}</span>` : ''}
-            </span>
-          </li>`).join('')}
-      </ol>
-
-      ${res.safety.length ? `<div class="notice alert mt"><strong>Safety notes identified</strong>
-        ${res.safety.map(s => esc(s)).join('<br>')}</div>` : ''}
-
-      ${res.warnings && res.warnings.length ? `<div class="notice mt"><strong>Please review</strong>
-        ${res.warnings.map(w => esc(w)).join('<br>')}</div>` : ''}`;
-  }
-
-  function runSplit() {
-    Splitter.splitExercise($('#builder-in').value).then(renderBuilderResult);
-  }
-
   /* ------------------------------------------------------------------ init */
 
   function initToggles() {
@@ -2492,22 +3005,10 @@ window.AI4M_DATA = {
 
   function init() {
     $$('.tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
-    $('#split-btn').addEventListener('click', runSplit);
-    $('#clear-btn').addEventListener('click', () => {
-      $('#builder-in').value = '';
-      renderBuilderResult(null);
-      $('#builder-in').focus();
-    });
-    $$('[data-sample]').forEach(b => b.addEventListener('click', () => {
-      $('#builder-in').value = b.dataset.sample;
-      runSplit();
-    }));
-
     initToggles();
     renderFilters();
     renderLibrary();
     renderSession();
-    renderBuilderResult(null);
     showTab('library', { silent: true });
   }
 

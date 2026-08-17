@@ -326,3 +326,39 @@ textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
   .topbar, .tabs, .controls, .chip, .filters { display: none !important; }
   .card { border-color: #999; break-inside: avoid; }
 }
+
+/* ------------------------------------------------------------- pose coach */
+
+.videowrap {
+  position: relative; width: 100%; max-width: 460px; margin: 0 auto 14px;
+  aspect-ratio: 4 / 3; background: var(--page-2);
+  border: 1px solid var(--rule); border-radius: var(--r-md); overflow: hidden;
+}
+.videowrap[hidden] { display: none; }
+.videowrap video,
+.videowrap canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+}
+.videowrap video { transform: scaleX(-1); }
+
+.matchbar { display: flex; align-items: baseline; gap: 9px; margin-bottom: 10px; }
+.matchbar b { font-size: 1.7rem; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--accent); }
+.matchbar span { font-size: .78rem; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink-3); }
+
+.angles { list-style: none; padding: 0; margin: 0; }
+.angles li {
+  display: grid; grid-template-columns: 74px 108px 1fr; gap: 10px; align-items: baseline;
+  padding: 8px 10px; border-radius: var(--r-sm); font-size: .87rem;
+  border-left: 2px solid var(--rule);
+}
+.angles li + li { margin-top: 4px; }
+.angles li.ok   { border-left-color: var(--ok);     background: var(--ok-bg); }
+.angles li.near { border-left-color: var(--warn);   background: var(--warn-bg); }
+.angles li.off  { border-left-color: var(--alert);  background: var(--alert-bg); }
+.a-name { font-weight: 650; }
+.a-val  { font-variant-numeric: tabular-nums; }
+.a-hint { color: var(--ink-2); font-size: .84rem; }
+
+.rail li[data-step] { cursor: pointer; }
+.rail li[data-step]:hover { background: var(--page); }

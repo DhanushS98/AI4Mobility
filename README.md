@@ -27,13 +27,14 @@ for it.
 
 | Component | Status | Detail |
 |---|---|---|
-| Six exercise programmes with sources | **Built** | Child's Pose, Cat–Cow, Thread the Needle, NHS lower limb guide, paediatric core and hip stability, plus an optional calf control extra. |
+| Ten exercise programmes with sources | **Built** | Lower limb, core and hip stability, glute strengthening, calf control, wrist and hand, Child's Pose, Cat–Cow, Thread the Needle, standing balance and seated upper body. |
 | Original description shown beside generated steps | **Built** | Added in response to supervisor feedback. Source text stored verbatim per programme. |
 | Manual description entry | **Built** | Free-text box, same splitter, confidence reported per step. |
 | Rule-based step splitting | **Built** | Deterministic linguistic pipeline. 24 unit tests, all passing. |
+| Description-to-steps conversion in the interface | **Built** | The description box on the Practise screen rebuilds the step list from whatever text is entered, whether it came from a programme or was typed by hand. |
+| Live pose estimation from the camera | **Built** | MediaPipe Pose Landmarker running on-device, with target joint angles derived from the same pose bank the illustrations are drawn from. Needs an internet connection the first time to fetch the model, and degrades cleanly if the camera or model is unavailable. |
 | **LLM-based step splitting** | **NOT built** | An adapter interface exists in `platform/js/splitter.js` and returns `null`. It is not connected to any model. See *Next steps* below for what would be required. |
-| Stick-figure pose pictures | **Partly** | All 27 poses render, but from hand-authored joint coordinates — not from a pose estimation model. |
-| Live camera pose feedback | **NOT built** | Landmark extraction exists in the notebook for recorded data only. Real-time feedback on a child needs consent handling and an ethics amendment. |
+| Stick-figure illustrations | **Partly** | All 46 poses render, but from hand-authored joint coordinates rather than from captured motion. They double as the reference the pose coach compares against. |
 | Read-aloud | **Partly** | Uses the browser's built-in speech synthesis. Nothing is bundled; quality depends on the device. |
 | Progress tracking | **Partly** | Per-visit only. No storage, so nothing persists. |
 | Accessibility controls | **Built** | Large text, high contrast, calm/reduced-motion, keyboard navigation, skip link, ARIA labelling. |
@@ -96,7 +97,8 @@ ai4mobility/
 │   ├── index.html          page structure
 │   ├── css/styles.css      child-friendly design system
 │   ├── js/splitter.js      step-splitting engine  (rule-based)
-│   ├── js/poses.js         stick-figure renderer  (27 poses)
+│   ├── js/poses.js         stick-figure renderer  (46 poses)
+│   ├── js/posecoach.js     live pose estimation and joint-angle feedback
 │   ├── js/app.js           application logic
 │   ├── js/data.js          AUTO-GENERATED from data/exercises.json
 │   └── build.py            regenerates data.js and inlines everything to dist/
@@ -112,6 +114,7 @@ ai4mobility/
 │   └── exercises.json      single source of truth for exercise content
 ├── tests/
 │   ├── test_splitter.js    24 tests for the JS splitter
+│   ├── test_posecoach.js   22 tests for the pose-coach angle maths
 │   └── test_splitter.py    parity tests for the Python mirror
 ├── docs/
 │   ├── report/             project report
@@ -149,6 +152,7 @@ python3 platform/build.py
 
 ```bash
 node tests/test_splitter.js      # 24 tests
+node tests/test_posecoach.js     # 22 tests
 python3 -m pytest tests/ -q      # Python mirror parity
 ```
 
@@ -185,9 +189,10 @@ it in the interface. Where the wording is ours rather than a source's, the
 ## Next steps
 
 1. **Connect a language model to the splitter** — see the four requirements above.
-2. **Live pose feedback** — on-device landmark detection, joint-angle comparison
-   against the target pose for the current step, simple corrective prompts.
-   Requires camera consent handling and an ethics amendment first.
+2. **Validate the pose feedback clinically** — the coach compares four joint
+   angles against a hand-authored reference. Those tolerances have not been
+   checked by a physiotherapist, and no child has used it. Before any real use
+   it needs clinical review and an ethics amendment covering camera use.
 3. **Persistence** — a small backend so a child's history survives between
    visits and a physiotherapist can see adherence between appointments.
 4. **Evaluate with real families** — nothing here has been tested with a child or

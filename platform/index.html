@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI4Mobility — guided exercise programmes</title>
-<meta name="description" content="Guided paediatric physiotherapy and mobility programmes, presented one step at a time with illustrations, timing and the original source description.">
+<meta name="description" content="Guided paediatric physiotherapy and mobility programmes with step-by-step illustrations, description-to-steps conversion and live pose feedback.">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -28,8 +28,7 @@
 <div class="wrap">
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab" role="tab" data-tab="library" aria-selected="true"  type="button">Programmes</button>
-    <button class="tab" role="tab" data-tab="session" aria-selected="false" type="button">Current session</button>
-    <button class="tab" role="tab" data-tab="builder" aria-selected="false" type="button">Add a programme</button>
+    <button class="tab" role="tab" data-tab="session" aria-selected="false" type="button">Practise</button>
   </nav>
 </div>
 
@@ -41,60 +40,19 @@
       <div class="eyebrow">Exercise library</div>
       <h1>Choose a programme</h1>
       <p>
-        Each programme is presented one step at a time, with an illustration,
-        the recommended repetitions and hold time, and the original description
-        it was taken from so it can be checked against the source.
+        Select a programme to load its description, or open any programme and
+        replace the text with your own. The description is separated into
+        numbered steps, each shown with an illustration and, if you turn the
+        camera on, live feedback on your position.
       </p>
     </div>
 
     <div class="filters" id="filters" role="group" aria-label="Filter by area"></div>
-
     <div class="grid" id="library-grid"></div>
   </section>
 
   <!-- ============================================================ SESSION -->
   <section class="panel" id="panel-session" role="tabpanel" hidden></section>
-
-  <!-- ============================================================ BUILDER -->
-  <section class="panel" id="panel-builder" role="tabpanel" hidden>
-    <div class="pagehead">
-      <div class="eyebrow">Custom programme</div>
-      <h1>Add your own exercise description</h1>
-      <p>
-        Enter a description from a physiotherapy leaflet, a clinic letter, or in
-        your own words. It will be separated into numbered steps, with any
-        repetitions, hold times and safety notes identified. The original text is
-        kept alongside so the two can be compared.
-      </p>
-    </div>
-
-    <div class="builder">
-      <div class="card">
-        <label class="fld" for="builder-in">Exercise description</label>
-        <p class="hint">
-          Full paragraphs are fine. Descriptions that are already numbered or
-          bulleted will keep the structure you entered.
-        </p>
-        <textarea id="builder-in" placeholder="For example: Lie on your back with your knees bent and feet flat. Squeeze your bottom and lift your hips until they line up with your knees. Hold for 5 seconds, then lower slowly. Repeat 10 times."></textarea>
-        <div class="row mt">
-          <button class="btn btn-primary" id="split-btn" type="button">Separate into steps</button>
-          <button class="btn" id="clear-btn" type="button">Clear</button>
-        </div>
-
-        <p class="small muted mt" style="margin-bottom:8px"><strong>Examples</strong></p>
-        <div class="samples">
-          <button class="btn btn-sm" type="button"
-            data-sample="Lay on your back with your leg straight. Point your foot and toes down to the floor or bed, then slowly pull your foot and toes up towards your knee. Repeat 10 times. Stop if pain becomes worse and seek advice from a healthcare professional.">Continuous prose</button>
-          <button class="btn btn-sm" type="button"
-            data-sample="1. Kneel on the floor with your knees apart.&#10;2. Sit back onto your heels.&#10;3. Fold forward and rest your tummy between your thighs.&#10;4. Hold for 20 seconds and breathe slowly.">Already numbered</button>
-          <button class="btn btn-sm" type="button"
-            data-sample="Lie on your back with legs bent and back flattened into the bed. Squeeze your bottom and roll your bottom and back off the floor. Hold for 5 seconds and then lower back down. Repeat 10 to 12 times. If you find the exercises cause you more pain please stop and seek advice from a healthcare professional.">With a safety note</button>
-        </div>
-      </div>
-
-      <div class="card" id="builder-out" aria-live="polite"></div>
-    </div>
-  </section>
 
 </main>
 
@@ -115,10 +73,10 @@
       <a href="https://www.yogabasics.com/asana/threading-the-needle/" target="_blank" rel="noopener">Yoga Basics — Threading the Needle</a>.
     </p>
     <p>
-      This is a student project. It is not a medical device and is not a
-      substitute for advice from a qualified physiotherapist. Where a child has
-      been given a specific programme by a clinician, that programme should be
-      followed. Stop any exercise that causes pain and seek advice.
+      The camera runs entirely on this device. No image is uploaded, stored or
+      recorded. This is a student project, not a medical device, and not a
+      substitute for advice from a qualified physiotherapist. Stop any exercise
+      that causes pain and seek advice.
     </p>
   </div>
 </footer>
@@ -126,6 +84,7 @@
 <script src="js/data.js"></script>
 <script src="js/splitter.js"></script>
 <script src="js/poses.js"></script>
+<script src="js/posecoach.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
