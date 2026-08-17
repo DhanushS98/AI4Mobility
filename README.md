@@ -9,14 +9,17 @@ MSc, Sheffield Hallam University · Team **Deepminds**
 
 ## What this is
 
-A child-friendly web platform that takes a written exercise description, splits
-it into clear numbered steps, and shows each step with a stick-figure picture, a
-timer and a spoken prompt. It ships with six exercise programmes drawn from
-published NHS paediatric physiotherapy resources, and a text box so a parent can
-paste in any other description and have it split the same way.
+A web platform that takes a written exercise description, separates it into
+numbered steps, and presents each step with an illustration, a timer, a spoken
+prompt and optional live feedback from the camera on the position being held.
 
-Everything runs in the browser. No server, no accounts, no tracking, no network
-requests.
+It ships with ten exercise programmes drawn from published NHS paediatric
+physiotherapy resources. The description box is editable, so any programme can
+be adjusted or replaced with a description of your own and re-converted.
+
+Everything runs in the browser. There is no server, no account system and no
+tracking. The only network request is fetching the pose model the first time the
+camera is used.
 
 ---
 
@@ -29,7 +32,6 @@ for it.
 |---|---|---|
 | Ten exercise programmes with sources | **Built** | Lower limb, core and hip stability, glute strengthening, calf control, wrist and hand, Child's Pose, Cat–Cow, Thread the Needle, standing balance and seated upper body. |
 | Original description shown beside generated steps | **Built** | Added in response to supervisor feedback. Source text stored verbatim per programme. |
-| Manual description entry | **Built** | Free-text box, same splitter, confidence reported per step. |
 | Rule-based step splitting | **Built** | Deterministic linguistic pipeline. 24 unit tests, all passing. |
 | Description-to-steps conversion in the interface | **Built** | The description box on the Practise screen rebuilds the step list from whatever text is entered, whether it came from a programme or was typed by hand. |
 | Live pose estimation from the camera | **Built** | MediaPipe Pose Landmarker running on-device, with target joint angles derived from the same pose bank the illustrations are drawn from. Needs an internet connection the first time to fetch the model, and degrades cleanly if the camera or model is unavailable. |
@@ -41,8 +43,8 @@ for it.
 | Accounts / therapist dashboard | **NOT built** | No backend of any kind. |
 | Clinical or user evaluation | **NOT done** | No child and no clinician has used this. The largest gap in the project. |
 
-The same table is rendered inside the platform itself under the
-**What's real** tab, so anyone using it sees it too.
+This table is kept in the repository and the project report rather than in the
+interface, so that what a parent sees stays focused on the exercises.
 
 ---
 
@@ -95,7 +97,7 @@ implementation is a one-file change.
 ai4mobility/
 ├── platform/               the web interface
 │   ├── index.html          page structure
-│   ├── css/styles.css      child-friendly design system
+│   ├── css/styles.css      interface styles
 │   ├── js/splitter.js      step-splitting engine  (rule-based)
 │   ├── js/poses.js         stick-figure renderer  (46 poses)
 │   ├── js/posecoach.js     live pose estimation and joint-angle feedback
