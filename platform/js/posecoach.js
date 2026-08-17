@@ -149,7 +149,21 @@
 
     const matched = items.filter(i => i.ok).length;
     const score = items.length ? Math.round((matched / items.length) * 100) : null;
-    return { ready: items.length > 0, items, score };
+
+    // A single sentence for the main feedback box: praise when everything is in
+    // range, otherwise the correction for whichever joint is furthest out.
+    let primaryCue;
+    if (!items.length) {
+      primaryCue = 'Move so more of the body is in view.';
+    } else if (matched === items.length) {
+      primaryCue = 'That looks right — hold the position steady.';
+    } else {
+      const worst = items.slice().sort((a, b) =>
+        Math.abs(b.diff) - Math.abs(a.diff))[0];
+      primaryCue = worst.hint + ' at the ' + worst.label.toLowerCase() + '.';
+    }
+
+    return { ready: items.length > 0, items, score, primaryCue };
   }
 
   /* --------------------------------------------------------------- runtime */

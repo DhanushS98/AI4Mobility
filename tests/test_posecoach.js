@@ -92,6 +92,16 @@ check('comparison with no measurement is not ready',
 check('coach reports camera support as a boolean', typeof Coach.supported === 'boolean');
 check('coach is not running before start', Coach.running === false);
 
+/* ------------------------------------------------------------ primary cue */
+
+check('a matching pose produces an encouraging cue',
+      /hold the position/i.test(Coach.compare('stand', m).primaryCue),
+      Coach.compare('stand', m).primaryCue);
+check('a mismatched pose produces a correction naming a joint',
+      /(bending|straightening)/i.test(cmpBridge.primaryCue), cmpBridge.primaryCue);
+check('the cue names the joint that is furthest out',
+      /elbow|knee|hip|trunk/i.test(cmpBridge.primaryCue), cmpBridge.primaryCue);
+
 console.log('='.repeat(60));
 console.log(`  ${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

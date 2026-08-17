@@ -1,13 +1,9 @@
 /* =============================================================================
    AI4Mobility — application logic
 
-   Two views:
-     Programmes — the exercise library
-     Practise   — an editable description box that drives a step list, an
-                  illustrated step-by-step view, and the live pose coach
-
-   No framework, no network requests other than the optional pose model, and no
-   browser storage. Session state is held in memory for the visit.
+   Sections: Personalise · Exercise guide · Live pose coach · About
+   No framework and no browser storage. The only network request is the pose
+   model, fetched the first time the camera is started.
    ============================================================================= */
 
 (function () {
@@ -18,22 +14,42 @@
   const Coach = window.AI4MCoach;
   const DATA = window.AI4M_DATA;
 
+  /* -------------------------------------------------------------- constants */
+
+  // Which "what are you focusing on?" option each programme family belongs to.
+  const FAMILY_TO_CONDITION = {
+    'Lower limb': 'lower-limb',
+    'Core and hips': 'core-hip',
+    'Hips and glutes': 'core-hip',
+    'Balance': 'balance',
+    'Upper limb': 'upper-limb',
+    'Stretch and mobility': 'rotation'
+  };
+
+  const DIFFICULTY = {
+    beginner: { label: 'Beginner',          holdFactor: 0.6, repsDelta: -3 },
+    standard: { label: 'Standard',          holdFactor: 1.0, repsDelta: 0 },
+    advanced: { label: 'Building strength', holdFactor: 1.5, repsDelta: +3 }
+  };
+
+  // Holds longer than this are a resting position rather than a working hold,
+  // so difficulty must not scale them (prone lying is 30 minutes).
+  const MAX_SCALED_HOLD = 120;
+
   /* ------------------------------------------------------------------ state */
 
   const state = {
-    tab: 'library',
-    filter: 'All',
-    programme: null,     // the loaded programme, or null for a custom description
-    steps: [],           // the step list currently being practised
+    condition: 'all',
+    difficulty: 'standard',
+    selectedId: DATA.programmes[0].id,
     stepIndex: 0,
-    edited: false,       // true once the description no longer matches the source
-    running: false,
-    remaining: 0,
-    ticker: null,
+    steps: [],
+    descText: null,
+    edited: false,
     done: new Set(),
-    speak: false,
-    coachOn: false,
-    coachState: null
+    message: null,
+    safetyFound: null,
+    coachRunning: false
   };
 
   const $  = (sel, root) => (root || document).querySelector(sel);
@@ -52,126 +68,120 @@
     return r ? m + 'm ' + r + 's' : m + 'm';
   }
 
-  function doseLine(s) {
-    const bits = [];
-    if (s.reps) bits.push(s.reps + ' repetitions');
-    if (s.hold_s) bits.push(formatSeconds(s.hold_s) + ' hold');
-    return bits.join(' · ');
-  }
+  /* ------------------------------------------------------------ dosage maths */
 
-  /* ------------------------------------------------------------------- tabs */
+  /** Apply the chosen difficulty to one step, keeping the NHS default alongside. */
+  function adjust(step) {
+    const d = DIFFICULTY[state.difficulty];
+    const out = { hold: step.hold_s || 0, reps: step.reps || 0, changed: false };
 
-  function showTab(name, opts) {
-    state.tab = name;
-    $$('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
-    $$('.panel').forEach(p => { p.hidden = p.id !== 'panel-' + name; });
-    if (name !== 'session') stopCoach();
-    if (!(opts && opts.silent)) {
-      const h = $('#panel-' + name + ' h1, #panel-' + name + ' h2');
-      if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+    if (out.hold > 0 && out.hold <= MAX_SCALED_HOLD && d.holdFactor !== 1) {
+      const scaled = Math.max(3, Math.round(out.hold * d.holdFactor));
+      if (scaled !== out.hold) { out.hold = scaled; out.changed = true; }
     }
-    window.scrollTo(0, 0);
+    if (out.reps > 0 && d.repsDelta !== 0) {
+      const shifted = Math.max(3, out.reps + d.repsDelta);
+      if (shifted !== out.reps) { out.reps = shifted; out.changed = true; }
+    }
+    return out;
   }
 
-  /* ---------------------------------------------------------------- library */
-
-  function levelBars(n) {
-    let out = '<span class="level" aria-label="Level ' + n + ' of 3">';
-    for (let i = 1; i <= 3; i++) out += '<i class="' + (i <= n ? 'on' : '') + '"></i>';
-    return out + '</span>';
+  function doseLine(step) {
+    const a = adjust(step);
+    const bits = [];
+    if (a.reps) bits.push(a.reps + ' reps');
+    if (a.hold) bits.push(formatSeconds(a.hold) + ' hold');
+    if (!bits.length) return '';
+    let line = bits.join(' · ');
+    if (a.changed) {
+      const orig = [];
+      if (step.reps) orig.push(step.reps + ' reps');
+      if (step.hold_s) orig.push(formatSeconds(step.hold_s) + ' hold');
+      line += ' (NHS default: ' + orig.join(' · ') + ')';
+    }
+    return line;
   }
 
-  function families() {
-    const set = [];
-    DATA.programmes.forEach(p => { if (set.indexOf(p.family) === -1) set.push(p.family); });
-    return ['All'].concat(set.sort());
+  /* ------------------------------------------------------------- programmes */
+
+  function currentProgramme() {
+    return DATA.programmes.find(p => p.id === state.selectedId) || DATA.programmes[0];
   }
 
-  function renderFilters() {
-    const host = $('#filters');
-    host.innerHTML = '<span class="lbl">Area</span>' + families().map(f =>
-      `<button class="chip" type="button" data-fam="${esc(f)}" aria-pressed="${f === state.filter}">${esc(f)}</button>`
-    ).join('');
-    $$('[data-fam]', host).forEach(b => b.addEventListener('click', () => {
-      state.filter = b.dataset.fam;
-      renderFilters();
-      renderLibrary();
-    }));
+  function filteredProgrammes() {
+    if (state.condition === 'all') return DATA.programmes;
+    return DATA.programmes.filter(p => FAMILY_TO_CONDITION[p.family] === state.condition);
   }
 
-  function renderLibrary() {
-    const host = $('#library-grid');
-    const list = DATA.programmes.filter(p => state.filter === 'All' || p.family === state.filter);
+  function renderExerciseList() {
+    const list = filteredProgrammes();
+    const el = $('#exercise-list');
 
-    host.innerHTML = list.map(p => `
-      <button class="ecard" data-id="${esc(p.id)}" type="button">
-        <div class="ecard-fig" aria-hidden="true">${Poses.render(p.steps[0].pose, { animate: false, title: '' })}</div>
-        <div>
-          <h3>${esc(p.title)}</h3>
-          <div class="ecard-sub">${esc(p.subtitle)}</div>
-        </div>
-        <p class="ecard-goal">${esc(p.goal)}</p>
-        <div class="ecard-meta">
-          <span class="pill">${p.steps.length} steps</span>
-          <span class="pill">${p.duration_min} min</span>
-          <span class="pill">${esc(p.position)}</span>
-          ${p.source_url ? '<span class="pill src">Referenced</span>' : ''}
-        </div>
-        <div class="row spread">
-          ${levelBars(p.difficulty)}
-        </div>
+    if (!list.length) {
+      el.innerHTML = '<div class="no-match">No exercises match that focus area yet. ' +
+                     'Try "Not sure / general mobility" to see the full guide.</div>';
+      return;
+    }
+    if (!list.find(p => p.id === state.selectedId)) {
+      selectProgramme(list[0].id, { silent: true });
+    }
+
+    el.innerHTML = list.map(p => `
+      <button class="exercise-btn${p.id === state.selectedId ? ' active' : ''}" type="button" data-id="${esc(p.id)}">
+        <strong>${esc(p.title)}</strong>
+        <span>${esc(p.goal)}</span>
       </button>`).join('');
 
-    $$('.ecard', host).forEach(b => b.addEventListener('click', () => loadProgramme(b.dataset.id)));
+    $$('.exercise-btn', el).forEach(b =>
+      b.addEventListener('click', () => selectProgramme(b.dataset.id)));
   }
 
-  /* --------------------------------------------------------------- loading */
-
-  function loadProgramme(id) {
+  function selectProgramme(id, opts) {
     const p = DATA.programmes.find(x => x.id === id);
     if (!p) return;
-    state.programme = p;
+    state.selectedId = id;
     state.steps = p.steps.map(s => Object.assign({}, s));
+    state.descText = p.original_description;
     state.stepIndex = 0;
     state.edited = false;
     state.done = new Set();
-    state.remaining = 0;
-    stopTimer();
-    renderSession();
-    showTab('session');
-    const box = $('#desc-in');
-    if (box) box.value = p.original_description;
+    state.message = null;
+    state.safetyFound = null;
+    if (!(opts && opts.silent)) {
+      renderExerciseList();
+      renderViewer();
+      syncCoachPose();
+    }
   }
 
-  /**
-   * Convert whatever is in the description box into the practised step list.
-   * This is the same conversion whether the text came from a programme or was
-   * typed by hand.
-   */
+  /* ---------------------------------------------------- description → steps */
+
   function convertDescription() {
-    const text = $('#desc-in').value;
+    const text = $('#desc-text').value;
+    state.descText = text;
+
     Splitter.splitExercise(text).then(res => {
       if (!res.ok) {
-        state.convertError = res.reason === 'too_short'
-          ? 'The description is too short to separate. Please enter at least a full sentence.'
-          : res.reason === 'empty'
-            ? 'Enter a description first.'
-            : 'No steps could be identified in that description.';
-        renderSession();
+        state.message = {
+          kind: 'bad',
+          title: 'Unable to separate',
+          body: res.reason === 'too_short'
+            ? 'The description is too short. Please enter at least a full sentence.'
+            : res.reason === 'empty'
+              ? 'Enter a description first.'
+              : 'No steps could be identified in that description.'
+        };
+        renderViewer();
         return;
       }
-      state.convertError = null;
-      state.convertWarnings = res.warnings || [];
-      state.convertSafety = res.safety || [];
 
-      // Keep the illustration where the wording still matches the source step.
-      const source = state.programme ? state.programme.steps : [];
+      const source = currentProgramme().steps;
       state.steps = res.steps.map((s, i) => {
-        // Only carry the programme's title and illustration across when the
-        // wording is genuinely unchanged. Otherwise the picture would describe
-        // a movement the edited text no longer asks for.
+        // Keep the programme's title and illustration only where the wording is
+        // genuinely unchanged; otherwise the picture would describe a movement
+        // the edited text no longer asks for.
         const match = source[i];
-        const unchanged = match && normalise(match.text) === normalise(s.text);
+        const unchanged = match && flatten(match.text) === flatten(s.text);
         return {
           n: s.n,
           title: unchanged ? match.title : null,
@@ -181,55 +191,72 @@
           pose: unchanged ? match.pose : guessPose(s.text)
         };
       });
-      state.edited = !state.programme ||
-        normalise(text) !== normalise(state.programme.original_description);
+
+      state.edited = flatten(text) !== flatten(currentProgramme().original_description);
       state.stepIndex = 0;
       state.done = new Set();
-      state.remaining = 0;
-      stopTimer();
-      renderSession();
+      state.safetyFound = res.safety && res.safety.length ? res.safety : null;
+      state.message = (res.warnings && res.warnings.length)
+        ? { kind: 'warn', title: 'Please review', body: res.warnings.join('<br>') }
+        : { kind: 'warn', title: 'Steps rebuilt',
+            body: res.steps.length + ' step' + (res.steps.length === 1 ? '' : 's') +
+                  ' generated from the description above.' };
+      renderViewer();
+      syncCoachPose();
     });
   }
 
-  function normalise(s) {
+  function flatten(s) {
     return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
   }
 
-  /** Pick a plausible illustration for a step written by hand. */
+  /** Choose a plausible illustration for a step that was written by hand. */
   const POSE_HINTS = [
-    [/\bhands? and knees|four ?point|table\b/, 'table'],
-    [/\bround your back|arch.*ceiling|cat\b/, 'cat'],
-    [/\bdrop your tummy|cow\b/, 'cow'],
-    [/\bkneel/, 'kneel'],
-    [/\bsit back|onto your heels/, 'sit_heels'],
-    [/\bfold forward/, 'fold'],
-    [/\bbridge|lift your hips|raising your bottom/, 'bridge'],
-    [/\bclam|top knee/, 'clam'],
-    [/\bon your side\b/, 'clam'],
-    [/\bon your (tummy|front)|prone|stomach/, 'prone'],
-    [/\bdead bug/, 'dead_bug'],
-    [/\bhip.*(out to the side|abduct)/, 'hip_abduct'],
-    [/\bheel towards your bottom|bend your knee/, 'knee_bend'],
-    [/\bsqueeze your bottom|glute/, 'supine_glute'],
-    [/\bpush your knee down|quadriceps/, 'supine_quad'],
-    [/\bpoint your foot|toes up towards|ankle/, 'supine_ankle'],
-    [/\btip ?toes|heel raise|onto your toes/, 'heel_raise'],
-    [/\bone leg|single leg|balanc/, 'one_leg'],
-    [/\bheel to toe|tandem/, 'tandem_stand'],
-    [/\bsquat|sit on the chair/, 'chair_squat'],
-    [/\bstep up|onto the step/, 'step_up'],
-    [/\bwall\b/, 'wall_push'],
-    [/\bprayer/, 'prayer_stretch'],
-    [/\bwrist/, 'wrist_table'],
-    [/\belbow into your side|palm to face/, 'forearm_twist'],
-    [/\bshoulder.*(roll|circle)/, 'shoulder_roll'],
-    [/\breach.*above your head|overhead/, 'seated_reach'],
-    [/\bneck\b/, 'neck_stretch'],
-    [/\bturn your shoulders|look behind/, 'seated_twist'],
-    [/\bsit tall|sitting/, 'seated'],
-    [/\breach the .*hand up|towards the ceiling/, 'thread_reach'],
-    [/\bslide the .*hand between|thread/, 'thread'],
-    [/\bstand/, 'stand']
+    [/hands? and knees|four ?point|tabletop|table pose/, 'table'],
+    [/round your back|round your spine|towards the ceiling.*chin|\bcat\b/, 'cat'],
+    [/drop your (tummy|belly)|\bcow\b/, 'cow'],
+    [/slide the .*hand between|underneath your body|thread/, 'thread'],
+    [/reach the .*hand up|reach.*towards the ceiling/, 'thread_reach'],
+    [/kneel/, 'kneel'],
+    [/sit back|onto your heels/, 'sit_heels'],
+    [/fold forward|lower your chest towards/, 'fold'],
+    [/arms out in front|forehead on the mat|forehead rest/, 'arms_long'],
+    [/bridge|lift your hips|raising your bottom|roll your bottom/, 'bridge'],
+    [/straighten one leg.*hips level|bridge with leg/, 'bridge_leg_lift'],
+    [/lift your thigh|thigh off the floor/, 'thigh_lift'],
+    [/clam|top knee/, 'clam'],
+    [/on your side\b/, 'clam'],
+    [/extend one leg straight behind|leg straight behind/, 'quadruped_leg'],
+    [/on your (tummy|front)|prone|on your stomach/, 'prone'],
+    [/raise your foot towards the ceiling|knee to a right angle/, 'prone_hip_ext'],
+    [/dead bug|arms.*straight above.*legs bent/, 'dead_bug'],
+    [/out to the side|abduct/, 'hip_abduct'],
+    [/heel towards your bottom|bend your knee/, 'knee_bend'],
+    [/squeeze your bottom|glute squeeze/, 'supine_glute'],
+    [/push your knee down|quadriceps/, 'supine_quad'],
+    [/point your foot|toes up towards|ankle flexion/, 'supine_ankle'],
+    [/knee (still and )?bent.*(heel|tip ?toes)|soleus/, 'soleus_raise'],
+    [/tip ?toes|heel raise|onto your toes|gastrocnemius/, 'heel_raise'],
+    [/heel to toe|heel directly in front|tandem/, 'tandem_stand'],
+    [/walk in a straight line/, 'heel_toe_walk'],
+    [/one leg|single leg|balanc/, 'one_leg'],
+    [/lift your hip towards your shoulder|hip hitch/, 'hip_hitch'],
+    [/squat|going to sit|tap.*chair/, 'chair_squat'],
+    [/step up|foot on it|onto the step/, 'step_up'],
+    [/hands flat against a wall|wall push/, 'wall_push'],
+    [/prayer/, 'prayer_stretch'],
+    [/push the wrist down|push down the wrist/, 'hand_back_stretch'],
+    [/holding the palm|bring the wrist back/, 'palm_stretch'],
+    [/wrist from side to side|side to side/, 'wrist_side'],
+    [/forearm on a table|wrist up and down|wrist flex/, 'wrist_table'],
+    [/elbow into your side|palm to face/, 'forearm_twist'],
+    [/shoulders? .*(roll|circle)/, 'shoulder_roll'],
+    [/above your head|overhead/, 'seated_reach'],
+    [/head (gently )?towards one shoulder|neck/, 'neck_stretch'],
+    [/turn your shoulders|look behind/, 'seated_twist'],
+    [/sit tall|sitting|in a chair/, 'seated'],
+    [/lay on your back|lie on your back|on your back/, 'supine_glute'],
+    [/stand/, 'stand']
   ];
 
   function guessPose(text) {
@@ -240,349 +267,260 @@
     return 'stand';
   }
 
-  /* ---------------------------------------------------------------- session */
+  /* ----------------------------------------------------------------- viewer */
 
   function currentStep() {
     return state.steps[state.stepIndex] || null;
   }
 
-  function renderSession() {
-    const host = $('#panel-session');
-    const p = state.programme;
-
-    if (!state.steps.length && !p) {
-      host.innerHTML = `<div class="card empty">
-        <p>No programme loaded.</p>
-        <p><button class="btn btn-primary" type="button" data-goto>Browse the programmes</button></p>
-      </div>`;
-      $('[data-goto]', host).addEventListener('click', () => showTab('library'));
-      return;
-    }
-
+  function renderViewer() {
+    const p = currentProgramme();
     const step = currentStep();
     const total = state.steps.length;
-    const pct = total ? Math.round((state.done.size / total) * 100) : 0;
+    const d = DIFFICULTY[state.difficulty];
+    const viewer = $('#viewer');
 
-    host.innerHTML = `
-      <div class="row spread" style="margin-bottom:16px">
-        <button class="btn btn-sm" type="button" id="back-lib">All programmes</button>
-        <span class="small muted">
-          ${p ? esc(p.title) : 'Custom description'}${state.edited ? ' · edited' : ''}
-        </span>
+    const tags = [p.family, p.position]
+      .concat(p.source_url ? ['NHS referenced'] : ['General practice'])
+      .map(t => `<span class="tag">${esc(t)}</span>`).join('') +
+      (state.edited ? '<span class="tag edited">Edited description</span>' : '');
+
+    const stepDose = step ? adjust(step) : null;
+
+    viewer.innerHTML = `
+      <div class="viewer-head">
+        <div>
+          <h3>${esc(p.title)}</h3>
+          <div class="source">
+            ${p.source_url
+              ? `${esc(p.source_name.split(' — ')[0])} — <a href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(p.source_name.split(' — ')[1] || 'source')}</a>`
+              : esc(p.source_name)}
+          </div>
+          <div class="tag-row">${tags}</div>
+        </div>
       </div>
 
-      <div class="card" style="margin-bottom:16px">
-        <h2>Exercise description</h2>
+      <div class="dose">
+        <div><b>${total}</b> steps</div>
+        <div><b>${p.duration_min}</b> min approx.</div>
+        <div><b>${esc(d.label)}</b> level</div>
+        ${state.difficulty !== 'standard'
+          ? '<div class="adjusted">Reps and holds adjusted from the NHS default</div>' : ''}
+      </div>
+
+      <div class="desc-panel">
+        <h4>Exercise description</h4>
         <p class="hint">
-          Edit this text, or paste in a description of your own. Selecting
-          <strong>Convert to steps</strong> rebuilds the step list below from
-          whatever is written here.
+          This is the original wording. Edit it, or paste in a description of
+          your own, then select <strong>Convert to steps</strong> to rebuild the
+          guide below from whatever is written here.
         </p>
-        <textarea id="desc-in" rows="5"></textarea>
-        <div class="row mt">
-          <button class="btn btn-primary" type="button" id="convert">Convert to steps</button>
-          ${p ? '<button class="btn" type="button" id="restore">Restore original</button>' : ''}
-          <button class="btn" type="button" id="clear-desc">Clear</button>
-          ${p && p.source_url
-            ? `<span class="small muted">Source: <a href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(p.source_name)}</a></span>`
-            : (p ? `<span class="small muted">Source: ${esc(p.source_name)}</span>` : '')}
+        <textarea id="desc-text" rows="6" aria-label="Exercise description"></textarea>
+        <div class="desc-actions">
+          <button class="btn-primary" id="convert-btn" type="button">Convert to steps</button>
+          <button class="btn-ghost" id="restore-btn" type="button">Restore original</button>
+          <button class="btn-ghost" id="clear-btn" type="button">Clear</button>
         </div>
-        ${state.convertError ? `<div class="notice mt"><strong>Unable to separate</strong>${esc(state.convertError)}</div>` : ''}
-        ${(state.convertWarnings && state.convertWarnings.length)
-          ? `<div class="notice mt"><strong>Please review</strong>${state.convertWarnings.map(esc).join('<br>')}</div>` : ''}
-        ${(state.convertSafety && state.convertSafety.length)
-          ? `<div class="notice alert mt"><strong>Safety notes found in the description</strong>${state.convertSafety.map(esc).join('<br>')}</div>` : ''}
+        ${state.message
+          ? `<div class="msg ${state.message.kind}"><strong>${esc(state.message.title)}</strong>${state.message.body}</div>`
+          : ''}
+        ${state.safetyFound
+          ? `<div class="msg bad"><strong>Safety notes found in the description</strong>${state.safetyFound.map(esc).join('<br>')}</div>`
+          : ''}
       </div>
 
-      <div class="session">
-        <div>
-          <div class="card stagewrap">
-            <div class="stagehead">
-              <span>Step ${step ? step.n : 0} of ${total}</span>
-              <span>${p ? esc(p.family) : 'Custom'}</span>
-            </div>
-
-            ${step ? Poses.render(step.pose, { title: step.title || step.text }) : ''}
-
-            ${step && step.title ? `<p class="steptitle">${esc(step.title)}</p>` : ''}
-            <p class="steptext">${step ? esc(step.text) : 'No steps yet.'}</p>
-
-            <div class="dose${state.running ? ' running' : ''}" id="dosebox">${step ? renderDose(step) : ''}</div>
-
-            <div class="controls">
-              <button class="btn" type="button" id="prev" ${state.stepIndex === 0 ? 'disabled' : ''}>Previous</button>
-              ${step && step.hold_s > 0
-                ? `<button class="btn" type="button" id="play">${state.running ? 'Pause' : (state.remaining ? 'Resume' : 'Start timer')}</button>`
-                : ''}
-              <button class="btn btn-primary" type="button" id="next" ${total ? '' : 'disabled'}>
-                ${state.stepIndex === total - 1 ? 'Finish' : 'Next step'}
-              </button>
-              <button class="chip" type="button" id="say" aria-pressed="${state.speak}">Read aloud</button>
+      ${step ? `
+      <div class="step-area">
+        <div id="pose-visual">${Poses.render(step.pose, { title: step.title || step.text })}</div>
+        <div class="step-copy">
+          <div class="step-index">Step ${step.n} of ${total}</div>
+          ${step.title ? `<h4>${esc(step.title)}</h4>` : ''}
+          <p id="step-text">${esc(step.text)}${
+            stepDose.hold ? ` (hold for ${formatSeconds(stepDose.hold)}` +
+              (stepDose.reps ? `, ${stepDose.reps} times)` : ')') :
+            (stepDose.reps ? ` (repeat ${stepDose.reps} times)` : '')}</p>
+          <div class="step-controls">
+            <button class="btn-ghost" id="prev-step" type="button" ${state.stepIndex === 0 ? 'disabled' : ''}>← Previous</button>
+            <button class="btn-ghost" id="next-step" type="button" ${state.stepIndex === total - 1 ? 'disabled' : ''}>Next →</button>
+            <button class="btn-accent" id="speak-step" type="button">Read this step</button>
+            <button class="btn-primary" id="speak-all" type="button">Read full guide</button>
+            <div class="step-dots">
+              ${state.steps.map((s, i) => `<button type="button" class="${i === state.stepIndex ? 'active' : (state.done.has(s.n) ? 'done' : '')}" data-dot="${i}" aria-label="Go to step ${s.n}"></button>`).join('')}
             </div>
           </div>
-
-          <div class="card">
-            <h2>Pose feedback</h2>
-            <div class="coach">
-              <div class="videowrap" id="videowrap" ${state.coachOn ? '' : 'hidden'}>
-                <video id="coach-video" playsinline muted></video>
-                <canvas id="coach-canvas"></canvas>
-              </div>
-              <div id="coach-panel">${renderCoachPanel()}</div>
-              <div class="row mt">
-                <button class="btn ${state.coachOn ? '' : 'btn-primary'}" type="button" id="coach-toggle">
-                  ${state.coachOn ? 'Turn camera off' : 'Turn camera on'}
-                </button>
-                <span class="small muted">Runs on this device. Nothing is uploaded or recorded.</span>
-              </div>
-            </div>
-          </div>
-
-          ${p ? `<div class="card">
-            <div class="notice alert"><strong>Safety</strong>${esc(p.safety)}</div>
-          </div>` : ''}
+          <div class="speech-status" id="speech-status"></div>
         </div>
+      </div>` : '<p class="no-match">No steps to show — convert a description above.</p>'}
 
-        <div>
-          <div class="card">
-            <h2>Steps</h2>
-            <div class="bar"><i style="width:${pct}%"></i></div>
-            <ol class="rail">
-              ${state.steps.map((s, i) => `
-                <li class="${state.done.has(s.n) ? 'done' : ''}${i === state.stepIndex ? ' now' : ''}" data-step="${i}">
-                  <span class="rail-n">${state.done.has(s.n) ? '&check;' : s.n}</span>
-                  <span>
-                    <span class="rail-t">${esc(s.title || s.text)}</span>
-                    ${s.title ? `<span class="rail-p">${esc(s.text.length > 74 ? s.text.slice(0, 74) + '…' : s.text)}</span>` : ''}
-                    ${doseLine(s) ? `<span class="rail-p"><strong>${doseLine(s)}</strong></span>` : ''}
-                  </span>
-                </li>`).join('')}
-            </ol>
-            <div class="row mt">
-              <button class="btn btn-sm" type="button" id="reset">Reset progress</button>
-            </div>
-          </div>
+      <div class="all-steps">
+        <h4>All steps</h4>
+        <ol class="steplist">
+          ${state.steps.map((s, i) => `
+            <li class="${i === state.stepIndex ? 'active' : ''}${state.done.has(s.n) ? ' done' : ''}" data-step="${i}">
+              <span class="sl-n">${state.done.has(s.n) ? '&check;' : s.n}</span>
+              <span>
+                <span class="sl-t">${esc(s.title || s.text)}</span>
+                ${s.title ? `<span class="sl-d">${esc(s.text.length > 90 ? s.text.slice(0, 90) + '…' : s.text)}</span>` : ''}
+                ${doseLine(s) ? `<span class="sl-d"><strong>${esc(doseLine(s))}</strong></span>` : ''}
+              </span>
+            </li>`).join('')}
+        </ol>
+      </div>
 
-          ${p ? `<div class="card">
-            <h2>About this programme</h2>
-            <p class="small">${esc(p.goal)}</p>
-            <p class="small muted" style="margin-top:10px">
-              Position: ${esc(p.position)} &middot; Approx. ${p.duration_min} minutes
-            </p>
-          </div>` : ''}
-        </div>
+      <div class="safety-note">
+        <strong>Safety</strong>
+        ${esc(p.safety)}
       </div>`;
 
-    // restore the description text after the re-render
-    const box = $('#desc-in');
-    if (box) box.value = state.descText != null
-      ? state.descText
-      : (p ? p.original_description : '');
-    if (box) box.addEventListener('input', () => { state.descText = box.value; });
+    const box = $('#desc-text');
+    box.value = state.descText != null ? state.descText : p.original_description;
+    box.addEventListener('input', () => { state.descText = box.value; });
 
-    $('#back-lib').addEventListener('click', () => { stopCoach(); stopTimer(); showTab('library'); });
-    $('#convert').addEventListener('click', convertDescription);
-    $('#clear-desc').addEventListener('click', () => {
-      state.descText = '';
-      $('#desc-in').value = '';
-      $('#desc-in').focus();
+    $('#convert-btn').addEventListener('click', convertDescription);
+    $('#clear-btn').addEventListener('click', () => {
+      state.descText = ''; box.value = ''; box.focus();
     });
-    const restore = $('#restore');
-    if (restore) restore.addEventListener('click', () => {
-      state.descText = p.original_description;
-      state.steps = p.steps.map(s => Object.assign({}, s));
-      state.edited = false;
-      state.stepIndex = 0;
-      state.done = new Set();
-      state.convertError = state.convertWarnings = state.convertSafety = null;
-      stopTimer();
-      renderSession();
-    });
+    $('#restore-btn').addEventListener('click', () => selectProgramme(p.id));
 
-    $('#prev').addEventListener('click', prevStep);
-    $('#next').addEventListener('click', nextStep);
-    $('#reset').addEventListener('click', () => {
-      state.done = new Set(); state.stepIndex = 0; state.remaining = 0;
-      stopTimer(); renderSession();
-    });
-    const play = $('#play');
-    if (play) play.addEventListener('click', toggleTimer);
-    $('#say').addEventListener('click', toggleSpeech);
-    $('#coach-toggle').addEventListener('click', toggleCoach);
-
-    $$('[data-step]').forEach(li => li.addEventListener('click', () => {
-      state.stepIndex = parseInt(li.dataset.step, 10);
-      state.remaining = 0; stopTimer(); renderSession();
-    }));
-
-    if (state.coachOn && Coach.running && step) Coach.setPose(step.pose);
-    if (state.speak && step) speak((step.title ? step.title + '. ' : '') + step.text);
-  }
-
-  function renderDose(step) {
-    const cells = [];
-    if (step.reps) cells.push(`<div><b>${step.reps}</b><span>Repetitions</span></div>`);
-    if (step.hold_s > 0) {
-      const shown = (state.running || state.remaining) ? state.remaining : step.hold_s;
-      cells.push(`<div aria-live="polite"><b>${formatSeconds(shown)}</b><span>${state.running ? 'Remaining' : 'Hold'}</span></div>`);
-    }
-    if (!cells.length) cells.push('<div><b>&mdash;</b><span>No set count</span></div>');
-    return cells.join('');
-  }
-
-  /* ------------------------------------------------------------ pose coach */
-
-  function renderCoachPanel() {
-    if (!state.coachOn) {
-      return `<p class="small muted">
-        Turning the camera on shows your position beside the illustration and
-        compares the main joint angles with the target for the current step.
-      </p>`;
+    if (step) {
+      $('#prev-step').addEventListener('click', () => goToStep(state.stepIndex - 1, true));
+      $('#next-step').addEventListener('click', () => {
+        state.done.add(step.n);
+        goToStep(state.stepIndex + 1);
+      });
+      $('#speak-step').addEventListener('click', () => speak(stepSentence(step)));
+      $('#speak-all').addEventListener('click', () => {
+        speak(p.title + '. ' + state.steps.map((s, i) =>
+          'Step ' + (i + 1) + '. ' + stepSentence(s)).join(' '));
+      });
+      $$('[data-dot]').forEach(b =>
+        b.addEventListener('click', () => goToStep(parseInt(b.dataset.dot, 10))));
     }
 
-    const cs = state.coachState;
-    if (!cs) return '<p class="small muted">Starting…</p>';
-
-    if (cs.status && cs.status !== 'running') {
-      return `<div class="notice"><strong>Camera</strong>${esc(cs.message || 'Not available.')}</div>`;
-    }
-
-    const res = cs.result;
-    if (!res || !res.ready) {
-      return `<p class="small muted">${esc(cs.message || 'Looking for a person in view…')}</p>`;
-    }
-
-    return `
-      <div class="matchbar">
-        <b>${res.score}%</b>
-        <span>joints within range</span>
-      </div>
-      ${cs.message ? `<p class="small muted">${esc(cs.message)}</p>` : ''}
-      <ul class="angles">
-        ${res.items.map(i => `
-          <li class="${i.ok ? 'ok' : (i.near ? 'near' : 'off')}">
-            <span class="a-name">${esc(i.label)}</span>
-            <span class="a-val">${i.measured}° <span class="muted">/ ${i.target}°</span></span>
-            <span class="a-hint">${esc(i.hint)}</span>
-          </li>`).join('')}
-      </ul>
-      <p class="small muted" style="margin-top:10px">
-        Angles are compared with the illustrated position and are a guide only.
-      </p>`;
+    $$('[data-step]').forEach(li =>
+      li.addEventListener('click', () => goToStep(parseInt(li.dataset.step, 10))));
   }
 
-  function refreshCoachPanel() {
-    const el = $('#coach-panel');
-    if (el) el.innerHTML = renderCoachPanel();
+  function stepSentence(step) {
+    const a = adjust(step);
+    let s = (step.title ? step.title + '. ' : '') + step.text;
+    if (a.hold) s += ' Hold for ' + formatSeconds(a.hold) + '.';
+    if (a.reps) s += ' Repeat ' + a.reps + ' times.';
+    return s;
   }
 
-  function toggleCoach() {
-    if (state.coachOn) { stopCoach(); renderSession(); return; }
-    state.coachOn = true;
-    state.coachState = { status: 'loading', message: 'Starting…', result: null };
-    renderSession();
-
-    const step = currentStep();
-    Coach.start($('#coach-video'), $('#coach-canvas'), step ? step.pose : 'stand', update => {
-      state.coachState = update;
-      refreshCoachPanel();
-    }).then(ok => {
-      if (!ok) {
-        const wrap = $('#videowrap');
-        if (wrap) wrap.hidden = true;
-      }
-    });
-  }
-
-  function stopCoach() {
-    if (!state.coachOn) return;
-    state.coachOn = false;
-    state.coachState = null;
-    try { Coach.stop(); } catch (e) { /* nothing to stop */ }
-  }
-
-  /* ------------------------------------------------------------------ timer */
-
-  function toggleTimer() {
-    const step = currentStep();
-    if (!step || !step.hold_s) return;
-    if (state.running) stopTimer();
-    else {
-      if (!state.remaining) state.remaining = step.hold_s;
-      state.running = true;
-      state.ticker = setInterval(tick, 1000);
-    }
-    refreshDose();
-  }
-
-  function stopTimer() {
-    state.running = false;
-    if (state.ticker) { clearInterval(state.ticker); state.ticker = null; }
-  }
-
-  function tick() {
-    state.remaining -= 1;
-    if (state.remaining <= 0) {
-      state.remaining = 0;
-      stopTimer();
-      refreshDose();
-      if (state.speak) speak('Hold complete.');
-      return;
-    }
-    refreshDose();
-  }
-
-  function refreshDose() {
-    const step = currentStep(), box = $('#dosebox');
-    if (box && step) {
-      box.innerHTML = renderDose(step);
-      box.className = 'dose' + (state.running ? ' running' : '');
-    }
-    const play = $('#play');
-    if (play) play.textContent = state.running ? 'Pause' : (state.remaining ? 'Resume' : 'Start timer');
-  }
-
-  /* -------------------------------------------------------------- stepping */
-
-  function nextStep() {
-    const step = currentStep();
-    if (!step) return;
-    state.done.add(step.n);
-    stopTimer();
-    state.remaining = 0;
-    if (state.stepIndex < state.steps.length - 1) state.stepIndex += 1;
-    renderSession();
-  }
-
-  function prevStep() {
-    if (state.stepIndex > 0) state.stepIndex -= 1;
-    stopTimer();
-    state.remaining = 0;
-    renderSession();
+  function goToStep(i) {
+    if (i < 0 || i >= state.steps.length) return;
+    state.stepIndex = i;
+    renderViewer();
+    syncCoachPose();
   }
 
   /* ---------------------------------------------------------------- speech */
 
-  function toggleSpeech() {
-    state.speak = !state.speak;
-    const b = $('#say');
-    if (b) b.setAttribute('aria-pressed', String(state.speak));
-    if (state.speak) {
-      const s = currentStep();
-      if (s) speak((s.title ? s.title + '. ' : '') + s.text);
-    } else if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
+  function speak(text) {
+    const statusEl = $('#speech-status');
+    if (!('speechSynthesis' in window)) {
+      if (statusEl) statusEl.textContent = 'Speech playback is not supported in this browser.';
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.95;
+    utter.lang = 'en-GB';
+    if (statusEl) statusEl.textContent = 'Speaking…';
+    utter.onend = () => { if (statusEl) statusEl.textContent = 'Finished.'; };
+    utter.onerror = () => { if (statusEl) statusEl.textContent = 'Could not play audio.'; };
+    window.speechSynthesis.speak(utter);
+  }
+
+  /* ------------------------------------------------------------ pose coach */
+
+  function syncCoachPose() {
+    const step = currentStep();
+    const title = $('#coach-title');
+    const target = $('#coach-target');
+    if (title) {
+      const name = state.edited ? 'Your description' : currentProgramme().title;
+      title.textContent = step
+        ? (name + ' — ' + (step.title || 'step ' + step.n))
+        : 'Pose coach';
+    }
+    if (target) {
+      const t = step ? Coach.targetAngles(step.pose) : null;
+      target.textContent = t
+        ? 'Target angles for this step: ' + Object.keys(t)
+            .map(k => k + ' ' + Math.round(t[k]) + '°').join(', ') + '.'
+        : '';
+    }
+    if (state.coachRunning && step) Coach.setPose(step.pose);
+  }
+
+  function renderCoachUpdate(update) {
+    const fb = $('#coach-feedback');
+    const angles = $('#coach-angles');
+    const placeholder = $('#coach-placeholder');
+
+    if (update.status && update.status !== 'running') {
+      if (placeholder) {
+        placeholder.style.display = 'flex';
+        placeholder.textContent = update.message || 'Camera not available.';
+      }
+      if (fb) { fb.className = 'feedback-box warn'; fb.textContent = update.message || 'Camera not available.'; }
+      if (angles) angles.innerHTML = '';
+      return;
+    }
+
+    if (placeholder) placeholder.style.display = 'none';
+
+    const res = update.result;
+    if (!res || !res.ready) {
+      if (fb) {
+        fb.className = 'feedback-box';
+        fb.textContent = update.message || 'Move so your shoulders, hips and knees are visible in frame.';
+      }
+      if (angles) angles.innerHTML = '';
+      return;
+    }
+
+    if (fb) {
+      fb.className = 'feedback-box ' + (res.score >= 75 ? 'good' : (res.score >= 40 ? '' : 'warn'));
+      fb.textContent = res.primaryCue + (update.message ? ' ' + update.message : '');
+    }
+    if (angles) {
+      angles.innerHTML = '<ul class="angles">' + res.items.map(i => `
+        <li class="${i.ok ? 'ok' : (i.near ? 'near' : 'off')}">
+          <span class="a-name">${esc(i.label)}</span>
+          <span class="a-val">${i.measured}° <span style="color:var(--ink-soft)">/ ${i.target}°</span></span>
+          <span class="a-hint">${esc(i.hint)}</span>
+        </li>`).join('') + '</ul>';
     }
   }
 
-  function speak(text) {
-    if (!window.speechSynthesis || !state.speak) return;
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.94; u.lang = 'en-GB';
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* speech is optional and must never block the interface */ }
+  function startCoach() {
+    const startBtn = $('#coach-start'), stopBtn = $('#coach-stop');
+    const step = currentStep();
+    startBtn.disabled = true;
+    $('#coach-feedback').textContent = 'Starting…';
+
+    Coach.start($('#coach-video'), $('#coach-canvas'), step ? step.pose : 'stand', renderCoachUpdate)
+      .then(ok => {
+        state.coachRunning = ok;
+        stopBtn.disabled = !ok;
+        startBtn.disabled = ok;
+      });
+  }
+
+  function stopCoach() {
+    Coach.stop();
+    state.coachRunning = false;
+    $('#coach-start').disabled = false;
+    $('#coach-stop').disabled = true;
+    const placeholder = $('#coach-placeholder');
+    if (placeholder) { placeholder.style.display = 'flex'; placeholder.textContent = 'Camera stopped.'; }
+    $('#coach-feedback').className = 'feedback-box';
+    $('#coach-feedback').textContent = 'Feedback will appear here once the camera is running.';
+    $('#coach-angles').innerHTML = '';
   }
 
   /* ------------------------------------------------------------------ init */
@@ -600,12 +538,27 @@
   }
 
   function init() {
-    $$('.tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+    $('#hero-pose').innerHTML = Poses.render('bridge', { title: 'Bridge exercise illustration' });
+
+    $('#condition-select').addEventListener('change', e => {
+      state.condition = e.target.value;
+      renderExerciseList();
+      renderViewer();
+      syncCoachPose();
+    });
+    $('#difficulty-select').addEventListener('change', e => {
+      state.difficulty = e.target.value;
+      renderViewer();
+    });
+
+    $('#coach-start').addEventListener('click', startCoach);
+    $('#coach-stop').addEventListener('click', stopCoach);
+
     initToggles();
-    renderFilters();
-    renderLibrary();
-    renderSession();
-    showTab('library', { silent: true });
+    selectProgramme(DATA.programmes[0].id, { silent: true });
+    renderExerciseList();
+    renderViewer();
+    syncCoachPose();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

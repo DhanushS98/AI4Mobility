@@ -39,6 +39,7 @@ for it.
 | Stick-figure illustrations | **Partly** | All 46 poses render, but from hand-authored joint coordinates rather than from captured motion. They double as the reference the pose coach compares against. |
 | Read-aloud | **Partly** | Uses the browser's built-in speech synthesis. Nothing is bundled; quality depends on the device. |
 | Progress tracking | **Partly** | Per-visit only. No storage, so nothing persists. |
+| Personalisation (condition filter, difficulty) | **Built** | Filters the guide by focus area and scales reps and hold times, always displaying the NHS default alongside the adjusted figure. Resting positions such as the 30-minute prone lie are never scaled. |
 | Accessibility controls | **Built** | Large text, high contrast, calm/reduced-motion, keyboard navigation, skip link, ARIA labelling. |
 | Accounts / therapist dashboard | **NOT built** | No backend of any kind. |
 | Clinical or user evaluation | **NOT done** | No child and no clinician has used this. The largest gap in the project. |
