@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI4Mobility — Assistive Exercise Guide</title>
+<meta name="description" content="Turning NHS physiotherapy guidance into illustrated steps, spoken narration and live pose feedback for parents supporting children with mobility difficulties.">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site">
+  <nav>
+    <div class="brand"><span class="dot"></span> AI4Mobility</div>
+    <ul>
+      <li><a href="#personalize">Personalise</a></li>
+      <li><a href="#library">Exercise guide</a></li>
+      <li><a href="#coach">Live coach</a></li>
+      <li><a href="#about">About &amp; sources</a></li>
+    </ul>
+    <div class="nav-tools">
+      <button id="toggle-text" type="button" aria-pressed="false">Larger text</button>
+      <button id="toggle-contrast" type="button" aria-pressed="false">High contrast</button>
+      <button id="toggle-calm" type="button" aria-pressed="false">Reduce motion</button>
+    </div>
+  </nav>
+  <div class="hero">
+    <div>
+      <h1>Turning NHS physiotherapy guidance into pictures, sound &amp; live feedback</h1>
+      <p class="lead">A prototype assistive platform that helps parents and caregivers guide children with mobility difficulties through home exercises correctly and confidently — grounded in trusted NHS resources.</p>
+      <div class="hero-badges">
+        <span>Text → Visual guide</span>
+        <span>Image → Speech</span>
+        <span>Personalised difficulty</span>
+        <span>Live pose feedback</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div id="hero-pose"></div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <section id="why">
+    <h2>Why this exists</h2>
+    <p class="section-intro">Children with conditions such as cerebral palsy, developmental delay, or those recovering from injury often need regular physiotherapy at home. NHS guidance is thorough but text-heavy — hard to follow for non-specialists, and less accessible for children, low-literacy readers, or non-native speakers. This prototype converts written exercise instructions into step-by-step illustrations, spoken narration, and live camera feedback.</p>
+  </section>
+
+  <section id="personalize">
+    <h2>Personalise your guide</h2>
+    <p class="section-intro">Tell us a little about what you're working on, and the exercise guide below will highlight the most relevant NHS-based exercises and adjust the suggested reps and hold times.</p>
+    <div class="card personalize">
+      <div class="field">
+        <label for="condition-select">What are you focusing on?</label>
+        <select id="condition-select">
+          <option value="all">Not sure / general mobility</option>
+          <option value="lower-limb">Lower limb rehab / injury recovery</option>
+          <option value="core-hip">Core, hip &amp; glute strength</option>
+          <option value="balance">Balance &amp; coordination</option>
+          <option value="upper-limb">Upper limb, wrist &amp; hand</option>
+          <option value="rotation">Spinal &amp; rotational mobility</option>
+        </select>
+        <small>This filters the exercise list to the most relevant NHS-grounded exercises.</small>
+      </div>
+      <div class="field">
+        <label for="difficulty-select">Difficulty level</label>
+        <select id="difficulty-select">
+          <option value="beginner">Beginner — shorter holds, fewer reps</option>
+          <option value="standard" selected>Standard — NHS default guidance</option>
+          <option value="advanced">Building strength — longer holds, more reps</option>
+        </select>
+        <small>Adjusts the suggested hold time and repetitions. The NHS default is always shown alongside.</small>
+      </div>
+    </div>
+  </section>
+
+  <section id="library">
+    <h2>Exercise guide</h2>
+    <p class="section-intro">Step-by-step illustrated instructions generated from NHS exercise descriptions, with optional spoken narration for hands-free or low-vision use. Every exercise keeps its original wording, and you can edit it or paste your own description to rebuild the steps.</p>
+    <div class="card library-layout">
+      <div class="exercise-list" id="exercise-list"></div>
+      <div class="viewer" id="viewer"></div>
+    </div>
+  </section>
+
+  <section id="coach">
+    <h2>Live pose coach <span style="font-weight:400;color:var(--ink-soft);font-size:0.85rem;">(optional, experimental)</span></h2>
+    <p class="section-intro">Uses your device camera and an in-browser pose-detection model to give simple real-time cues while practising the step you have selected above. The target joint angles come from the same illustrations shown in the guide. All processing happens locally in your browser; no video is uploaded anywhere.</p>
+    <div class="card coach">
+      <div class="coach-video" id="coach-video-wrap">
+        <video id="coach-video" playsinline muted></video>
+        <canvas id="coach-canvas"></canvas>
+        <div class="coach-placeholder" id="coach-placeholder">Camera preview will appear here once started.</div>
+      </div>
+      <div class="coach-side">
+        <h3 id="coach-title">Pose coach</h3>
+        <p style="color:var(--ink-soft);font-size:0.9rem;">Position the camera so your shoulder, hip, knee and ankle are visible — side-on works best for lying and kneeling exercises — then press Start.</p>
+        <div class="coach-controls">
+          <button class="btn-primary" id="coach-start" type="button">Start camera</button>
+          <button class="btn-ghost" id="coach-stop" type="button" disabled>Stop camera</button>
+        </div>
+        <div class="feedback-box" id="coach-feedback">Feedback will appear here once the camera is running.</div>
+        <div id="coach-angles"></div>
+        <p class="coach-target" id="coach-target"></p>
+        <p class="privacy-note">Video never leaves your device — pose detection runs fully in the browser. This gives simplified, non-clinical cues and is not a substitute for guidance from a physiotherapist.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <h2>About &amp; grounding sources</h2>
+    <p class="section-intro">This prototype maps directly onto the AI4Mobility proposal: transforming trusted clinical guidance into accessible multimodal formats.</p>
+    <div class="about-grid">
+      <div class="card">
+        <h4>1. Text → Steps</h4>
+        <p>Exercise descriptions are separated into ordered steps, with repetitions, hold times and safety notes identified automatically. Any description can be edited or replaced and re-converted.</p>
+      </div>
+      <div class="card">
+        <h4>2. Steps → Visual</h4>
+        <p>Each step is rendered as a simplified illustrated diagram from a library of 46 hand-built poses, a stand-in for a generative vision model in this prototype.</p>
+      </div>
+      <div class="card">
+        <h4>3. Visual → Speech</h4>
+        <p>Each step, or the whole guide, can be read aloud using your browser's built-in text-to-speech, standing in for an open-source TTS pipeline.</p>
+      </div>
+      <div class="card">
+        <h4>4. Personalisation</h4>
+        <p>Condition and difficulty selections adjust which exercises are recommended and their suggested reps and hold times, with the NHS default always shown alongside.</p>
+      </div>
+      <div class="card">
+        <h4>5. Live pose feedback</h4>
+        <p>An in-browser pose-estimation model tracks joints in real time and compares elbow, knee, hip and trunk angles with the illustrated target for the current step.</p>
+      </div>
+      <div class="card">
+        <h4>Prototype status</h4>
+        <p>This is a working demo built to test the concept end-to-end. It is not a certified medical device and should not replace advice from a qualified physiotherapist.</p>
+      </div>
+    </div>
+
+    <div class="card sources">
+      <h4>Grounding sources</h4>
+      <ul>
+        <li><a href="https://library.sheffieldchildrens.nhs.uk/general-lower-limb-exercises/" target="_blank" rel="noopener">General lower limb exercises</a> — Sheffield Children's NHS Foundation Trust</li>
+        <li><a href="https://library.sheffieldchildrens.nhs.uk/core-and-hip-stability-exercises/" target="_blank" rel="noopener">Core and hip stability exercises</a> — Sheffield Children's NHS Foundation Trust</li>
+        <li><a href="https://library.sheffieldchildrens.nhs.uk/glute-strengthening/" target="_blank" rel="noopener">Glute strengthening</a> — Sheffield Children's NHS Foundation Trust</li>
+        <li><a href="https://library.sheffieldchildrens.nhs.uk/calf-control-exercises/" target="_blank" rel="noopener">Calf control exercises</a> — Sheffield Children's NHS Foundation Trust</li>
+        <li><a href="https://library.sheffieldchildrens.nhs.uk/wrist-exercises/" target="_blank" rel="noopener">Wrist exercises</a> — Sheffield Children's NHS Foundation Trust</li>
+        <li><a href="https://www.yogabasics.com/asana/threading-the-needle/" target="_blank" rel="noopener">Threading the Needle</a> — Yoga Basics</li>
+        <li>Child's Pose, Cat–Cow, standing balance and seated upper body routines are described from general practice rather than copied from a single leaflet, and are labelled as such in the guide.</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="foot-inner">
+    AI4Mobility prototype — Project A60, MSc AI Research and Development Project (55-708252), Sheffield Hallam University. Built from the "AI4Mobility: A Multimodal Assistive Platform" project proposal. Not a substitute for professional medical or physiotherapy advice. Always follow guidance from your child's clinical team.
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/splitter.js"></script>
+<script src="js/poses.js"></script>
+<script src="js/posecoach.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
